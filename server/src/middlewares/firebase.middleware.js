@@ -1,6 +1,6 @@
-import auth from "../services/firebaseAdminService";
-import asyncHandler from "../utils/asyncHandler";
-import ApiError from "../utils/ApiError";
+import auth from "../services/firebaseAdminService.js";
+import asyncHandler from "../utils/asyncHandler.js";
+import ApiError from "../utils/ApiError.js";
 
 const verifyAuthBlockingToken = asyncHandler(async (req, res, next) => {
   const idToken = req.header("Authorization")?.replace("Bearer ", "");
