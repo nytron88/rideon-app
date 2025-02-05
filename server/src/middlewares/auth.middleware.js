@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { BlacklistedAccessToken } from "../models/blacklistedAccessToken.model.js";
 
 const verifyLogin = asyncHandler(async (req, res, next) => {
   try {
@@ -11,6 +12,16 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
 
     if (!accessToken) {
       throw new ApiError(401, "Unauthorized request");
+    }
+
+    const isBlacklisted = await BlacklistedAccessToken.findOne({
+      token: accessToken,
+    });
+
+    if (isBlacklisted) {
+      throw new ApiError(401, {
+        message: "Invalid access token",
+      });
     }
 
     const decodedToken = jwt.verify(
@@ -23,7 +34,6 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
     if (!user) {
       throw new ApiError(401, {
         message: "Invalid access token",
-        invalid_access_token: true,
       });
     }
     req.user = user;
@@ -33,7 +43,6 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
       401,
       error.message?.message || {
         message: "Invalid access token",
-        invalid_access_token: true,
       }
     );
   }
