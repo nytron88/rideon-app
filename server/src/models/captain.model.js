@@ -52,11 +52,6 @@ const captainSchema = new mongoose.Schema({
       required: true,
     },
   },
-  refreshToken: {
-    type: String,
-    default: "",
-    select: false,
-  },
 });
 
 captainSchema.methods.generateAccessToken = function () {

@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import config from "../config/config";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: config.apiKey,
@@ -12,5 +13,19 @@ const firebaseConfig = {
   measurementId: config.measurementId,
 };
 
-export const app = initializeApp(firebaseConfig);
-export const analytics = getAnalytics(app);
+const app = initializeApp(firebaseConfig);
+
+export const auth = getAuth(app);
+export const provider = new GoogleAuthProvider();
+
+export let analytics;
+if (typeof window !== "undefined" && navigator.onLine) {
+  try {
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.warn(
+      "Analytics initialization skipped due to offline mode:",
+      error.message
+    );
+  }
+}

@@ -11,7 +11,12 @@ const verifyAuthBlockingToken = asyncHandler(async (req, res, next) => {
 
   try {
     const decodedToken = await auth.verifyIdToken(idToken);
-    req.user = decodedToken;
+    req.user = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      name: decodedToken.name,
+      photo: decodedToken.picture,
+    };
     next();
   } catch (error) {
     throw new ApiError(401, "Invalid or expired token");
