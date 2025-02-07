@@ -10,12 +10,21 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
-import { Home } from "./pages";
+import { AuthLayout } from "./components";
+import { Home, UserSignup } from "./pages";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route path="" element={<Home />} />
+      <Route
+        path="user-signup"
+        element={
+          <AuthLayout authentication={false}>
+            <UserSignup />
+          </AuthLayout>
+        }
+      />
     </Route>
   )
 );

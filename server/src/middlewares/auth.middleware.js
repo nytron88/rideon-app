@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import { BlacklistedAccessToken } from "../models/blacklistedAccessToken.model.js";
+import client from "../services/redisService.js";
 
 const verifyLogin = asyncHandler(async (req, res, next) => {
   try {
@@ -14,14 +14,10 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
       throw new ApiError(401, "Unauthorized request");
     }
 
-    const isBlacklisted = await BlacklistedAccessToken.findOne({
-      token: accessToken,
-    });
+    const isBlacklisted = await client.get(`blacklist:${accessToken}`);
 
     if (isBlacklisted) {
-      throw new ApiError(401, {
-        message: "Invalid access token",
-      });
+      throw new ApiError(401, "Unauthorized request");
     }
 
     const decodedToken = jwt.verify(

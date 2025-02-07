@@ -1,18 +1,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowRight, Clock, Shield, MapPin } from "lucide-react";
+import { ArrowRight, Clock, Shield, MapPin, User, Car } from "lucide-react";
 import Logo from "../assets/logo.svg";
 
 function Home() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   if (isAuthenticated) {
-    return <div>Authenticated Home Page</div>;
+    return <div className="text-white">Authenticated Home Page</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br text-white">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-12 md:py-24">
         <div className="flex flex-col items-center text-center">
@@ -34,14 +34,55 @@ function Home() {
             destination with just a few taps.
           </p>
 
-          {/* CTA Button */}
-          <Link
-            to="/signup"
-            className="group bg-white text-black px-8 py-4 rounded-full font-semibold text-lg transition-all hover:bg-gray-100 flex items-center gap-2"
-          >
-            Get Started
-            <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-          </Link>
+          {/* Role Selection Section */}
+          <div className="w-full max-w-4xl">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-8">
+              Get Started
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* User Card */}
+              <Link
+                to="/user-signup"
+                className="group bg-gray-800 p-8 rounded-2xl hover:bg-gray-700 transition-all"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-4 p-4 bg-white/10 rounded-full">
+                    <User className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Ride as a User</h3>
+                  <p className="text-gray-400 mb-6">
+                    Book rides and travel comfortably to your destination
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-white font-medium">
+                    Sign up as User
+                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </Link>
+
+              {/* Captain Card */}
+              <Link
+                to="/captain-signup"
+                className="group bg-gray-800 p-8 rounded-2xl hover:bg-gray-700 transition-all"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-4 p-4 bg-white/10 rounded-full">
+                    <Car className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Drive as a Captain
+                  </h3>
+                  <p className="text-gray-400 mb-6">
+                    Join our fleet and earn money on your own schedule
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-white font-medium">
+                    Sign up as Captain
+                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Features Section */}
@@ -71,15 +112,6 @@ function Home() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-800 mt-24">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center text-gray-400">
-            <p>&copy; 2025 Ride On. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

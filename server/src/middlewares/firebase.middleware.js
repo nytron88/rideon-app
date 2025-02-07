@@ -12,7 +12,6 @@ const verifyAuthBlockingToken = asyncHandler(async (req, res, next) => {
   try {
     const decodedToken = await auth.verifyIdToken(idToken);
     req.user = {
-      uid: decodedToken.uid,
       email: decodedToken.email,
       name: decodedToken.name,
       photo: decodedToken.picture,

@@ -27,9 +27,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const google = asyncHandler(async (req, res) => {
   const { name: fullname, email, photo: avatar } = req.user;
-  const { role } = req.body;
 
-  if (!email || !fullname || !avatar || !role) {
+  if (!email || !fullname || !avatar) {
     throw new ApiError(400, "Missing required fields");
   }
 
@@ -55,6 +54,7 @@ const google = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
   await client.del(`refreshToken:${req.user._id}`);
+  await client.set(`blacklist:${req.cookies.accessToken}`, "", "EX", 30);
 
   const options = {
     httpOnly: true,
@@ -72,12 +72,6 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
     req.cookies.refreshToken || req.body.refreshToken;
-
-  const { role } = req.body;
-
-  if (!role) {
-    throw new ApiError(400, "Role is required");
-  }
 
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
