@@ -2,27 +2,19 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
-import { Captain } from "../models/captain.model.js";
 import client from "../services/redisService.js";
 import jwt from "jsonwebtoken";
 
-const getModel = (role) => {
-  if (role === "user") return User;
-  if (role === "captain") return Captain;
-  throw new ApiError(400, "Invalid role specified");
-};
-
-const generateAccessAndRefreshToken = async (userId, role) => {
+const generateAccessAndRefreshToken = async (userId) => {
   try {
-    const Model = getModel(role);
-    const user = await Model.findById(userId);
+    const user = await User.findById(userId);
     if (!user) throw new ApiError(404, "User not found");
 
     const refreshToken = user.generateRefreshToken();
     const accessToken = user.generateAccessToken();
 
     await client.set(
-      `refreshToken:${role}:${userId}`,
+      `refreshToken:${userId}`,
       refreshToken,
       "EX",
       7 * 24 * 60 * 60
@@ -35,32 +27,21 @@ const generateAccessAndRefreshToken = async (userId, role) => {
 };
 
 const google = asyncHandler(async (req, res) => {
-  const { name: fullname, email, photo: avatar, role } = req.body;
-  if (!email || !fullname || !avatar || !role) {
+  const { name: fullname, email, photo } = req.body;
+
+  if (!email || !fullname || !photo) {
     throw new ApiError(400, "Missing required fields");
   }
-  const otherModel = role === "user" ? Captain : User;
 
-  const existingUser = await otherModel.findOne({ email });
-
-  if (existingUser) {
-    throw new ApiError(400, "User already exists");
-  }
-
-  const Model = getModel(role);
-
-  let user = await Model.findOne({ email });
+  let user = await User.findOne({ email });
 
   if (!user) {
-    user = await Model.create({ fullname, email, avatar });
+    user = await User.create({ fullname, email, photo });
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-    user._id,
-    role
+    user._id
   );
-
-  await client.set(`role:${user._id}`, role, "NX");
 
   const options = {
     httpOnly: true,
@@ -76,10 +57,8 @@ const google = asyncHandler(async (req, res) => {
 });
 
 const logout = asyncHandler(async (req, res) => {
-  const role = await client.get(`role:${req.user._id}`);
-
-  await client.del(`refreshToken:${role}:${req.user._id}`);
-  await client.set(`blacklist:${req.cookies.accessToken}`, "", "EX", 30);
+  await client.del(`refreshToken:${req.user?._id}`);
+  await client.set(`blacklist:${req.cookies?.accessToken}`, "", "EX", 30);
 
   const options = {
     httpOnly: true,
@@ -108,14 +87,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET
     );
 
-    const role = await client.get(`role:${decodedToken._id}`);
-
-    if (!role) {
-      throw new ApiError(401, "Invalid refresh token");
-    }
-
     const storedRefreshToken = await client.get(
-      `refreshToken:${role}:${decodedToken._id}`
+      `refreshToken:${decodedToken._id}`
     );
 
     if (!storedRefreshToken || storedRefreshToken !== incomingRefreshToken) {
@@ -129,7 +102,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     };
 
     const { accessToken, refreshToken: newRefreshToken } =
-      await generateAccessAndRefreshToken(decodedToken._id, role);
+      await generateAccessAndRefreshToken(decodedToken._id);
 
     return res
       .status(200)
@@ -147,8 +120,4 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-const getUserProfile = asyncHandler(async (req, res) => {
-  return res.status(200).json(new ApiResponse(200, req.user, "User found"));
-});
-
-export { google, logout, refreshAccessToken, getUserProfile };
+export { google, logout, refreshAccessToken };
