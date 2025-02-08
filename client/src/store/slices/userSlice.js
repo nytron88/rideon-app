@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { logUser, setLoading } from "./authSlice";
 import apiClient from "../../services/api";
 
 const initialState = {
@@ -9,9 +10,11 @@ const initialState = {
 
 export const getUserProfile = createAsyncThunk(
   "user/getUserProfile",
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
     try {
+      dispatch(setLoading(true));
       const response = await apiClient.get("user/profile");
+      dispatch(logUser(true));
       return response.data;
     } catch (error) {
       if (error.response && error.response.data) {

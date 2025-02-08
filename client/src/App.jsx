@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
-import { getUserProfile } from "./store/slices/authSlice";
+import { getUserProfile } from "./store/slices/userSlice";
 import apiClient from "./services/api";
 import { useDispatch, useSelector } from "react-redux";
 import { Footer, Header, Loader, Error } from "./components";
@@ -8,7 +8,7 @@ import { Footer, Header, Loader, Error } from "./components";
 function App() {
   const [healthCheckError, setHealthCheckError] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
-  const { loading, isAuthenticated, user } = useSelector((state) => state.auth);
+  const { loading, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {

@@ -8,8 +8,10 @@ import {
 
 const router = Router();
 
-router.get("/profile", verifyLogin, getUserProfile);
-router.put("/role", verifyLogin, addRole);
-router.put("/status", verifyLogin, updateStatus);
+router.use(verifyLogin);
+
+router.get("/profile", getUserProfile);
+router.put("/role", addRole);
+router.put("/status", updateStatus);
 
 export default router;

@@ -36,7 +36,7 @@ const google = asyncHandler(async (req, res) => {
   let user = await User.findOne({ email });
 
   if (!user) {
-    user = await User.create({ fullname, email, photo });
+    user = await User.create({ fullname, email, photo, role: "user" });
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(

@@ -22,13 +22,17 @@ function GetStarted() {
       const idToken = await result.user.getIdToken();
       await dispatch(
         googleAuth({
-          role,
           idToken,
           email: result.user.email,
           name: result.user.displayName,
           photo: result.user.photoURL,
         })
-      );
+      ).unwrap();
+
+      if (role === "captain") {
+        return navigate("/captain/register");
+      }
+
       navigate("/");
     } catch (error) {
       setError("Authentication failed. Please try again.");

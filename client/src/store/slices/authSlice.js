@@ -4,7 +4,7 @@ import apiClient from "../../services/api";
 
 const initialState = {
   isAuthenticated: false,
-  loading: true,
+  loading: false,
   error: null,
 };
 
@@ -64,6 +64,13 @@ const authSlice = createSlice({
   initialState,
   name: "auth",
   reducers: {
+    logUser: (state) => {
+      state.isAuthenticated = true;
+      state.loading = false;
+    },
+    setLoading: (state, action) => {
+      state.loading = action.payload;
+    },
     resetError: (state) => {
       state.error = null;
     },
@@ -93,21 +100,9 @@ const authSlice = createSlice({
       .addCase(logout.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      .addCase(getUserProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getUserProfile.fulfilled, (state) => {
-        state.loading = false;
-        state.isAuthenticated = true;
-      })
-      .addCase(getUserProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
       });
   },
 });
 
-export const { resetError } = authSlice.actions;
+export const { logUser, setLoading, resetError } = authSlice.actions;
 export default authSlice.reducer;
