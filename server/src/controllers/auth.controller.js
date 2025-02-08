@@ -39,8 +39,16 @@ const google = asyncHandler(async (req, res) => {
   if (!email || !fullname || !avatar || !role) {
     throw new ApiError(400, "Missing required fields");
   }
+  const otherModel = role === "user" ? Captain : User;
+
+  const existingUser = await otherModel.findOne({ email });
+
+  if (existingUser) {
+    throw new ApiError(400, "User already exists");
+  }
 
   const Model = getModel(role);
+
   let user = await Model.findOne({ email });
 
   if (!user) {
@@ -67,7 +75,7 @@ const google = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { accessToken, refreshToken }, "Success"));
 });
 
-const logoutUser = asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   const role = await client.get(`role:${req.user._id}`);
 
   await client.del(`refreshToken:${role}:${req.user._id}`);
@@ -143,4 +151,4 @@ const getUserProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, "User found"));
 });
 
-export { google, logoutUser, refreshAccessToken, getUserProfile };
+export { google, logout, refreshAccessToken, getUserProfile };

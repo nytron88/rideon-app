@@ -11,25 +11,17 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { AuthLayout } from "./components";
-import { Home, Signup, Login } from "./pages";
+import { Home, GetStarted } from "./pages";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route path="" element={<Home />} />
       <Route
-        path="signup"
+        path="get-started"
         element={
           <AuthLayout authentication={false}>
-            <Signup />
-          </AuthLayout>
-        }
-      />
-      <Route
-        path="login"
-        element={
-          <AuthLayout authentication={false}>
-            <Login />
+            <GetStarted />
           </AuthLayout>
         }
       />

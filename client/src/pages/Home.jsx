@@ -53,18 +53,12 @@ function Home() {
                   experience modern urban mobility.
                 </p>
                 <Link
-                  to="/signup"
+                  to="/get-started"
                   className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all"
                 >
-                  Create Account
+                  Sign in or create an account to continue
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <p className="mt-4 text-gray-400">
-                  Already have an account?{" "}
-                  <Link to="/login" className="text-white hover:underline">
-                    Log in
-                  </Link>
-                </p>
               </div>
             </div>
           </div>
