@@ -17,6 +17,7 @@ export const getUserProfile = createAsyncThunk(
       dispatch(logUser(true));
       return response.data;
     } catch (error) {
+      dispatch(setLoading(false));
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data);
       }

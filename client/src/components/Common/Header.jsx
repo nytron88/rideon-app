@@ -5,10 +5,10 @@ import { logout } from "../../store/slices/authSlice";
 import Logo from "../../assets/logo.svg";
 
 const Header = () => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
-  const handleLogout = () => dispatch(logout(user?.role));
+  const handleLogout = () => dispatch(logout());
 
   const navButtons = [
     // {
