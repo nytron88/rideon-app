@@ -22,12 +22,10 @@ import rateLimiter from "./middlewares/rateLimiter.middleware.js";
 
 app.use(rateLimiter);
 
-import userRouter from "./routes/user.routes.js";
-import captainRouter from "./routes/captain.routes.js";
+import authRouter from "./routes/auth.routes.js";
 import healthcheckRouter from "./routes/healthcheck.routes.js";
 
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/captains", captainRouter);
+app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/healthcheck", healthcheckRouter);
 
 import errorHandler from "./middlewares/errorHandler.middleware.js";

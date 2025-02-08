@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <!-- Background -->
-  <rect width="200" height="200" rx="25" fill="#1a1a1a"/>
+  <rect width="200" height="200" rx="25" fill="#000000"/>
   
   <!-- Location Pin -->
   <path
@@ -22,17 +22,4 @@
   <line x1="30" y1="140" x2="50" y2="140" stroke="white" stroke-width="2"/>
   <line x1="25" y1="150" x2="45" y2="150" stroke="white" stroke-width="1.5"/>
   
-  <!-- App Name -->
-  <text
-    x="100"
-    y="185"
-    font-family="Arial, sans-serif"
-    font-size="24"
-    fill="white"
-    font-weight="bold"
-    text-anchor="middle"
-    dominant-baseline="middle"
-  >
-    Ride On
-  </text>
 </svg>

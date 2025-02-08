@@ -7,9 +7,10 @@ import { googleAuth } from "../../store/slices/authSlice";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
-function Signup({ role }) {
+function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +28,7 @@ function Signup({ role }) {
         email,
         password
       );
-      dispatch(googleAuth(userCredential.user));
+      dispatch(googleAuth({ ...userCredential.user, role }));
       navigate("/");
     } catch (error) {
       switch (error.code) {
@@ -91,6 +92,21 @@ function Signup({ role }) {
             </div>
           )}
           <form onSubmit={handleEmailSignup} className="space-y-4 mb-8">
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium mb-2">
+                Select Role
+              </label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20"
+                required
+              >
+                <option value="user">User</option>
+                <option value="captain">Captain</option>
+              </select>
+            </div>
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
                 Email address

@@ -2,7 +2,7 @@ import client from "../services/redisService.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 
-const MAX_REQUESTS = 5;
+const MAX_REQUESTS = 20;
 const TIME_WINDOW = 10 * 1000;
 
 const rateLimiter = asyncHandler(async (req, res, next) => {

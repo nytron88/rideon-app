@@ -3,16 +3,9 @@ import jwt from "jsonwebtoken";
 
 const captainSchema = new mongoose.Schema({
   fullname: {
-    firstname: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    lastname: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    type: String,
+    required: true,
+    trim: true,
   },
   email: {
     type: String,
@@ -32,25 +25,39 @@ const captainSchema = new mongoose.Schema({
     default: "inactive",
   },
   vehicle: {
-    color: {
-      type: String,
-      required: true,
-      minlength: [3, "Color must be at least 3 characters long"],
-    },
-    plate: {
-      type: String,
-      required: true,
-      minlength: [3, "Plate must be at least 3 characters long"],
-    },
-    capacity: {
-      type: Number,
-      required: true,
-      min: [1, "Capacity must be at least 1"],
-    },
-    vehicleType: {
-      type: String,
-      required: true,
-    },
+    type: new mongoose.Schema(
+      {
+        color: {
+          type: String,
+          required: function () {
+            return this.vehicle != null;
+          },
+          minlength: [3, "Color must be at least 3 characters long"],
+        },
+        plate: {
+          type: String,
+          required: function () {
+            return this.vehicle != null;
+          },
+          minlength: [3, "Plate must be at least 3 characters long"],
+        },
+        capacity: {
+          type: Number,
+          required: function () {
+            return this.vehicle != null;
+          },
+          min: [1, "Capacity must be at least 1"],
+        },
+        vehicleType: {
+          type: String,
+          required: function () {
+            return this.vehicle != null;
+          },
+        },
+      },
+      { _id: false }
+    ),
+    required: false,
   },
 });
 

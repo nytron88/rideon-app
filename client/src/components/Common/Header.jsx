@@ -11,18 +11,17 @@ const Header = () => {
   const handleLogout = () => dispatch(logout(user?.role));
 
   const navButtons = [
-    {
-      label: "Edit Profile",
-      to: "/edit-profile",
-      style: "bg-gray-800 hover:bg-gray-700",
-    },
+    // {
+    //   label: "Edit Profile",
+    //   to: "/edit-profile",
+    //   style: "bg-gray-800 hover:bg-gray-700",
+    // },
     {
       label: "Logout",
       onClick: handleLogout,
       style: "bg-red-600 hover:bg-red-700",
     },
   ];
-
 
   if (!isAuthenticated) return null;
 
@@ -34,7 +33,7 @@ const Header = () => {
           <img
             src={Logo || "/placeholder.svg"}
             alt="Ride On"
-            className="w-12 h-12 mr-3"
+            className="w-14 h-14 mr-3"
           />
           <span className="text-2xl font-bold tracking-wide">Ride On</span>
         </Link>
@@ -54,7 +53,7 @@ const Header = () => {
                 ) : (
                   <button
                     onClick={btn.onClick}
-                    className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 shadow-md ${btn.style}`}
+                    className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-300 shadow-md ${btn.style} cursor-pointer`}
                   >
                     {btn.label}
                   </button>

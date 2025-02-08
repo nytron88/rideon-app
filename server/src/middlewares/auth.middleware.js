@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { Captain } from "../models/captain.model.js";
 import client from "../services/redisService.js";
 
 const verifyLogin = asyncHandler(async (req, res, next) => {
@@ -25,20 +26,27 @@ const verifyLogin = asyncHandler(async (req, res, next) => {
       process.env.ACCESS_TOKEN_SECRET
     );
 
-    const user = await User.findById(decodedToken?._id).select("-refreshToken");
+    let Model = await client.get(`role:${decodedToken?._id}`) === "user" ? User : Captain;
+
+    const user = await Model.findById(decodedToken?._id).select(
+      "-refreshToken"
+    );
 
     if (!user) {
       throw new ApiError(401, {
         message: "Invalid access token",
+        invalid_access_token: true,
       });
     }
     req.user = user;
     next();
   } catch (error) {
+    console.error(error.message);
     throw new ApiError(
       401,
       error.message?.message || {
         message: "Invalid access token",
+        invalid_access_token: true,
       }
     );
   }

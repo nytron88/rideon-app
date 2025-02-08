@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { ArrowRight, Clock, Shield, MapPin, User, Car } from "lucide-react";
+import { ArrowRight, Clock, Shield, MapPin, Users } from "lucide-react";
 import Logo from "../assets/logo.svg";
 
 function Home() {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   if (isAuthenticated) {
     return <div className="text-white">Authenticated Home Page</div>;
@@ -34,53 +34,38 @@ function Home() {
             destination with just a few taps.
           </p>
 
-          {/* Role Selection Section */}
-          <div className="w-full max-w-4xl">
+          {/* Get Started Section */}
+          <div className="w-full max-w-3xl">
             <h2 className="text-2xl md:text-3xl font-semibold mb-8">
               Get Started
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* User Card */}
-              <Link
-                to="/user-signup"
-                className="group bg-gray-800 p-8 rounded-2xl hover:bg-gray-700 transition-all"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-4 p-4 bg-white/10 rounded-full">
-                    <User className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">Ride as a User</h3>
-                  <p className="text-gray-400 mb-6">
-                    Book rides and travel comfortably to your destination
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-white font-medium">
-                    Sign up as User
-                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </span>
+            <div className="bg-gray-800 p-8 rounded-2xl">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 p-4 bg-white/10 rounded-full">
+                  <Users className="w-8 h-8" />
                 </div>
-              </Link>
-
-              {/* Captain Card */}
-              <Link
-                to="/captain-signup"
-                className="group bg-gray-800 p-8 rounded-2xl hover:bg-gray-700 transition-all"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-4 p-4 bg-white/10 rounded-full">
-                    <Car className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">
-                    Drive as a Captain
-                  </h3>
-                  <p className="text-gray-400 mb-6">
-                    Join our fleet and earn money on your own schedule
-                  </p>
-                  <span className="inline-flex items-center gap-2 text-white font-medium">
-                    Sign up as Captain
-                    <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </div>
-              </Link>
+                <h3 className="text-xl font-semibold mb-4">
+                  Join Our Community
+                </h3>
+                <p className="text-gray-400 mb-6 max-w-xl">
+                  Whether you're looking to ride or drive, Ride On offers
+                  opportunities for everyone. Join our growing community and
+                  experience modern urban mobility.
+                </p>
+                <Link
+                  to="/signup"
+                  className="group inline-flex items-center gap-2 bg-white text-black px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all"
+                >
+                  Create Account
+                  <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <p className="mt-4 text-gray-400">
+                  Already have an account?{" "}
+                  <Link to="/login" className="text-white hover:underline">
+                    Log in
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>
