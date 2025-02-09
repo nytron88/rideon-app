@@ -15,7 +15,7 @@ export const getUserProfile = createAsyncThunk(
       dispatch(setLoading(true));
       const response = await apiClient.get("user/profile");
       dispatch(logUser(true));
-      return response.data;
+      return response.data.data;
     } catch (error) {
       dispatch(setLoading(false));
       if (error.response && error.response.data) {
@@ -31,7 +31,7 @@ export const addRole = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const response = await apiClient.post("user/role", data);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data);
@@ -46,7 +46,7 @@ export const updateStatus = createAsyncThunk(
   async (data, { rejectWithValue }) => {
     try {
       const response = await apiClient.put("user/status", data);
-      return response.data;
+      return response.data.data;
     } catch (error) {
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data);

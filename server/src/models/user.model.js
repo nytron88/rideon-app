@@ -28,7 +28,10 @@ const userSchema = new mongoose.Schema(
           color: { type: String, minlength: 3 },
           plate: { type: String, minlength: 3 },
           capacity: { type: Number, min: 1 },
-          vehicleType: { type: String },
+          vehicleType: {
+            type: String,
+            enum: ["Sedan", "SUV", "Hatchback", "Van"],
+          },
         },
         { _id: false }
       ),

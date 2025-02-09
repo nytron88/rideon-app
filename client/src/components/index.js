@@ -4,5 +4,6 @@ import Loader from "./Common/Loader";
 import Footer from "./Common/Footer";
 import Header from "./Common/Header";
 import Error from "./Common/Error";
+import Vehicle from "./Captain/Vehicle";
 
-export { AuthLayout, Loader, GetStarted, Footer, Header, Error };
+export { AuthLayout, Loader, GetStarted, Footer, Header, Error, Vehicle };

@@ -8,7 +8,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 const addRole = asyncHandler(async (req, res) => {
-  const { role, vehicle } = req.body;
+  const { role } = req.body;
 
   if (!["user", "captain"].includes(role)) {
     throw new ApiError(400, "Invalid role");
@@ -25,16 +25,6 @@ const addRole = asyncHandler(async (req, res) => {
   }
 
   if (role === "captain") {
-    if (
-      !vehicle ||
-      !vehicle.color ||
-      !vehicle.plate ||
-      !vehicle.capacity ||
-      !vehicle.vehicleType
-    ) {
-      throw new ApiError(400, "Missing vehicle details for captain role");
-    }
-    user.vehicle = vehicle;
     user.status = "inactive";
   }
 
@@ -58,6 +48,10 @@ const updateStatus = asyncHandler(async (req, res) => {
 
   if (user.role !== "captain") {
     throw new ApiError(403, "Only captains can change their status");
+  }
+
+  if (!user.vehicle) {
+    throw new ApiError(400, "Please add vehicle details first");
   }
 
   user.status = status;

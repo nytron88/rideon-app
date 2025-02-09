@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Loader } from "../index";
 
-function AuthLayout({ children, authentication = true, captainOnly = false }) {
+function AuthLayout({ children, authentication = true, allowedRole = null }) {
   const navigate = useNavigate();
   const { isAuthenticated: authStatus, loading } = useSelector(
     (state) => state.auth
@@ -14,24 +14,25 @@ function AuthLayout({ children, authentication = true, captainOnly = false }) {
     if (loading) return;
 
     if (authentication && !authStatus) {
-      navigate("/login");
+      navigate("/get-started");
       return;
     }
 
-    if (captainOnly && user?.role !== "captain") {
-      navigate("/");
-      return;
-    }
-
-    if (captainOnly && user?.role === "captain") {
-      navigate("/captain/dashboard");
-      return;
+    if (authentication && authStatus && allowedRole) {
+      if (user?.role !== allowedRole) {
+        navigate(
+          user?.role === "captain" ? "/captain/dashboard" : "/user/dashboard"
+        );
+        return;
+      }
     }
 
     if (!authentication && authStatus) {
-      navigate("/");
+      navigate(
+        user?.role === "captain" ? "/captain/dashboard" : "/user/dashboard"
+      );
     }
-  }, [authStatus, loading, navigate, authentication, captainOnly, user]);
+  }, [authStatus, loading, navigate, authentication, allowedRole, user]);
 
   return loading ? <Loader /> : <>{children}</>;
 }

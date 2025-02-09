@@ -11,7 +11,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { AuthLayout } from "./components";
-import { Home, GetStarted } from "./pages";
+import { Home, GetStarted, CaptainVehicle } from "./pages";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -22,6 +22,14 @@ const router = createBrowserRouter(
         element={
           <AuthLayout authentication={false}>
             <GetStarted />
+          </AuthLayout>
+        }
+      />
+      <Route
+        path="captain/vehicle"
+        element={
+          <AuthLayout authentication={true} allowedRole="captain">
+            <CaptainVehicle />
           </AuthLayout>
         }
       />

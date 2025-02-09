@@ -4,11 +4,10 @@ import { useDispatch } from "react-redux";
 import { auth, googleProvider, githubProvider } from "../../services/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { googleAuth } from "../../store/slices/authSlice";
-import { ArrowLeft, Github, ChevronDown } from "lucide-react";
+import { ArrowLeft, Github } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function GetStarted() {
-  const [role, setRole] = useState("user");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,10 +27,6 @@ function GetStarted() {
           photo: result.user.photoURL,
         })
       ).unwrap();
-
-      if (role === "captain") {
-        return navigate("/captain/register");
-      }
 
       navigate("/");
     } catch (error) {
@@ -66,27 +61,6 @@ function GetStarted() {
               {error}
             </div>
           )}
-
-          <div className="relative mb-8">
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium mb-2 text-gray-400"
-            >
-              I want to join as a
-            </label>
-            <div className="relative">
-              <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800/50 backdrop-blur rounded-lg focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none pr-10"
-              >
-                <option value="user">Regular User</option>
-                <option value="captain">Captain</option>
-              </select>
-              <ChevronDown className="w-4 h-4 absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
 
           <div className="space-y-4">
             <button

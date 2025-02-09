@@ -53,7 +53,7 @@ const google = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, { accessToken, refreshToken }, "Success"));
+    .json(new ApiResponse(200, { user, accessToken, refreshToken }, "Success"));
 });
 
 const logout = asyncHandler(async (req, res) => {

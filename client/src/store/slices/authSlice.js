@@ -19,7 +19,7 @@ export const googleAuth = createAsyncThunk(
         },
       });
       dispatch(setUser(response.data));
-      return response.data;
+      return response.data.data.user;
     } catch (error) {
       if (error.response && error.response.data) {
         return rejectWithValue(error.response.data);
