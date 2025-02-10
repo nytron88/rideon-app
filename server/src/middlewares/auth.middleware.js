@@ -4,6 +4,8 @@ import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import client from "../services/redisService.js";
 
+const CACHE_EXPIRY = 1800;
+
 const verifyLogin = asyncHandler(async (req, _, next) => {
   try {
     const accessToken =
@@ -24,16 +26,32 @@ const verifyLogin = asyncHandler(async (req, _, next) => {
       accessToken,
       process.env.ACCESS_TOKEN_SECRET
     );
+    const userId = decodedToken?._id;
 
-    const user = await User.findById(decodedToken?._id).select("-refreshToken");
-
-    if (!user) {
-      throw new ApiError(401, {
-        message: "Invalid access token",
-        invalid_access_token: true,
-      });
+    if (!userId) {
+      throw new ApiError(401, "Invalid access token");
     }
-    req.user = user;
+
+    const cacheKey = `user:${userId}`;
+
+    let user = await client.get(cacheKey);
+
+    if (user) {
+      req.user = JSON.parse(user);
+    } else {
+      user = await User.findById(userId).select("-refreshToken");
+
+      if (!user) {
+        throw new ApiError(401, {
+          message: "Invalid access token",
+          invalid_access_token: true,
+        });
+      }
+
+      await client.setex(cacheKey, CACHE_EXPIRY, JSON.stringify(user));
+      req.user = user;
+    }
+
     next();
   } catch (error) {
     throw new ApiError(

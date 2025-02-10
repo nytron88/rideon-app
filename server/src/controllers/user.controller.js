@@ -2,6 +2,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
+import client from "../services/redisService.js";
 
 const getUserProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, "User found"));
@@ -31,6 +32,8 @@ const addRole = asyncHandler(async (req, res) => {
   user.role = role;
   await user.save();
 
+  await client.del(`user:${user._id}`);
+
   res.json(new ApiResponse(200, user, "Role updated successfully"));
 });
 
@@ -56,6 +59,8 @@ const updateStatus = asyncHandler(async (req, res) => {
 
   user.status = status;
   await user.save();
+
+  await client.del(`user:${user._id}`);
 
   res.json(new ApiResponse(200, user, "Status updated"));
 });

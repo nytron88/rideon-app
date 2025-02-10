@@ -26,9 +26,27 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+const retryRequest = async (error) => {
+  const retryAfter = error.response?.headers["retry-after"]
+    ? parseInt(error.response.headers["retry-after"], 10) * 1000
+    : 2000;
+
+  console.warn(
+    `Rate limited. Retrying request in ${retryAfter / 1000} seconds...`
+  );
+
+  return new Promise((resolve) =>
+    setTimeout(() => resolve(apiClient.request(error.config)), retryAfter)
+  );
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (error.response?.status === 429) {
+      return retryRequest(error);
+    }
+
     if (
       error.response?.status === 401 &&
       error.response.data.message?.invalid_access_token === true
