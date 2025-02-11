@@ -3,7 +3,10 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import client from "../services/redisService.js";
-import { createStripeAccount as createStripeAccountService } from "../services/stripeService.js";
+import {
+  createStripeAccount as createStripeAccountService,
+  createAccountLinks,
+} from "../services/stripeService.js";
 
 const getUserProfile = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, req.user, "User found"));
@@ -67,7 +70,7 @@ const updateStatus = asyncHandler(async (req, res) => {
 });
 
 const createStripeAccount = asyncHandler(async (req, res) => {
-  const user = req.user;
+  const user = await User.findById(req.user._id);
 
   if (user.stripeAccountId) {
     throw new ApiError(400, "Stripe account already exists");
@@ -76,9 +79,18 @@ const createStripeAccount = asyncHandler(async (req, res) => {
   const account = await createStripeAccountService(user.email);
 
   user.stripeAccountId = account.id;
-  await user.save();
 
-  res.json(new ApiResponse(200, user, "Stripe account created"));
+  await user.save({ validateBeforeSave: false });
+
+  const accountLink = await createAccountLinks(account.id);
+
+  res.json(
+    new ApiResponse(
+      200,
+      { user, onboardingUrl: accountLink.url },
+      "Stripe account created"
+    )
+  );
 });
 
 export { getUserProfile, addRole, updateStatus, createStripeAccount };

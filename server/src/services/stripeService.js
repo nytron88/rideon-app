@@ -26,6 +26,15 @@ export const createPaymentIntent = async (amount, captainStripeId) => {
   });
 };
 
+export const createAccountLinks = async (accountId) => {
+  return await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${process.env.FRONTEND_URL}/captain-dashboard`,
+    return_url: `${process.env.FRONTEND_URL}/captain-dashboard`,
+    type: "account_onboarding",
+  });
+};
+
 export const verifyWebhook = (req) => {
   const sig = req.headers["stripe-signature"];
   return stripe.webhooks.constructEvent(
