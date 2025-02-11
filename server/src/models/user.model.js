@@ -22,6 +22,8 @@ const userSchema = new mongoose.Schema(
       },
     },
 
+    stripeAccountId: { type: String, default: null },
+
     vehicle: {
       type: new mongoose.Schema(
         {
