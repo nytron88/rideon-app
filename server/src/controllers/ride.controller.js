@@ -23,7 +23,7 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
 
   const captain = await User.findById(captainId);
 
-  if (!captain || captain.role !== "captain") {
+  if (!captain) {
     throw new ApiError(404, "Captain not found");
   }
 

@@ -33,6 +33,18 @@ const router = createBrowserRouter(
           </AuthLayout>
         }
       />
+      <Route 
+        path="user/dashboard"
+        element={
+          <AuthLayout authentication={true} allowedRole="user">
+            "User Dashboard"
+          </AuthLayout>
+        }
+      />
+      <Route
+        path="*"
+        element={<div className="text-white">404 Not Found</div>}
+      />
     </Route>
   )
 );

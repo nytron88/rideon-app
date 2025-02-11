@@ -11,7 +11,7 @@ function AuthLayout({ children, authentication = true, allowedRole = null }) {
   const { user } = useSelector((state) => state.user);
 
   useEffect(() => {
-    if (loading) return;
+    if ((authentication && !user) || loading) return;
 
     if (authentication && !authStatus) {
       navigate("/get-started");

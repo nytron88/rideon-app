@@ -38,7 +38,9 @@ const addRole = asyncHandler(async (req, res) => {
 
   await client.del(`user:${user._id}`);
 
-  res.json(new ApiResponse(200, user, "Role updated successfully"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Role updated successfully"));
 });
 
 const updateStatus = asyncHandler(async (req, res) => {
@@ -66,7 +68,7 @@ const updateStatus = asyncHandler(async (req, res) => {
 
   await client.del(`user:${user._id}`);
 
-  res.json(new ApiResponse(200, user, "Status updated"));
+  return res.status(200).json(new ApiResponse(200, user, "Status updated"));
 });
 
 const createStripeAccount = asyncHandler(async (req, res) => {
@@ -84,13 +86,63 @@ const createStripeAccount = asyncHandler(async (req, res) => {
 
   const accountLink = await createAccountLinks(account.id);
 
-  res.json(
-    new ApiResponse(
-      200,
-      { user, onboardingUrl: accountLink.url },
-      "Stripe account created"
-    )
-  );
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { user, onboardingUrl: accountLink.url },
+        "Stripe account created"
+      )
+    );
 });
 
-export { getUserProfile, addRole, updateStatus, createStripeAccount };
+const registerVehicle = asyncHandler(async (req, res) => {
+  const { color, plate, vehicleType, capacity } = req.body;
+
+  if (!color || !plate || !vehicleType || !capacity) {
+    throw new ApiError(400, "All fields are required");
+  }
+
+  const existingPlate = await User.findOne({ "vehicle.plate": plate });
+
+  if (existingPlate) {
+    throw new ApiError(400, "Vehicle with this plate number already exists");
+  }
+
+  const user = await User.findById(req.user._id);
+
+  user.vehicle = { color, plate, vehicleType, capacity };
+
+  await user.save();
+
+  await client.del(`user:${user._id}`);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Vehicle registered successfully"));
+});
+
+const deleteVehicle = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  user.vehicle = undefined;
+  user.status = "inactive";
+
+  await user.save({ validateBeforeSave: false });
+
+  await client.del(`user:${user._id}`);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, user, "Vehicle deleted successfully"));
+});
+
+export {
+  getUserProfile,
+  addRole,
+  updateStatus,
+  createStripeAccount,
+  registerVehicle,
+  deleteVehicle,
+};

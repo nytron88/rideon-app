@@ -56,6 +56,36 @@ export const updateStatus = createAsyncThunk(
   }
 );
 
+export const registerVehicle = createAsyncThunk(
+  "user/registerVehicle",
+  async (vehicleData, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("user/vehicle", vehicleData);
+      return response.data.data;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      return rejectWithValue("An unexpected error occurred. Please try again.");
+    }
+  }
+);
+
+export const deleteVehicle = createAsyncThunk(
+  "user/deleteVehicle",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.delete(`user/vehicle`);
+      return response.data.data;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      return rejectWithValue("An unexpected error occurred. Please try again.");
+    }
+  }
+);
+
 const userSlice = createSlice({
   initialState,
   name: "user",
@@ -99,6 +129,30 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(updateStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(registerVehicle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(registerVehicle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(registerVehicle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteVehicle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteVehicle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(deleteVehicle.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
