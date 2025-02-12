@@ -6,16 +6,31 @@ import gsap from "gsap";
 function UserDashboard() {
   const [showPanel, setShowPanel] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dashboardRef = useRef(null);
   const bottomSheetRef = useRef(null);
   const dragStartY = useRef(0);
   const currentY = useRef(0);
 
-  const SPRING_CONFIG = {
-    stiffness: 300,
-    damping: 30,
-    mass: 1,
-  };
+  // Handle screen size changes
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      // Reset panel state and position when switching between mobile and desktop
+      if (!mobile && bottomSheetRef.current) {
+        setShowPanel(true);
+        setIsDragging(false);
+        gsap.set(bottomSheetRef.current, { clearProps: "all" });
+      }
+    };
+
+    handleResize(); // Initial check
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Initial animations
   useEffect(() => {
@@ -27,7 +42,7 @@ function UserDashboard() {
       { opacity: 1, duration: 0.6, ease: "power2.out" }
     );
 
-    if (bottomSheetRef.current) {
+    if (bottomSheetRef.current && isMobile) {
       tl.fromTo(
         bottomSheetRef.current,
         { y: "100%" },
@@ -35,25 +50,20 @@ function UserDashboard() {
         "-=0.3"
       );
     }
-  }, []);
+  }, [isMobile]);
 
   // Handle mobile bottom sheet interactions
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!isMobile || !bottomSheetRef.current) return;
 
     const bottomSheet = bottomSheetRef.current;
-    if (!bottomSheet) return;
 
     const handleTouchStart = (e) => {
       const touch = e.touches[0];
       dragStartY.current = touch.clientY;
       currentY.current = 0;
       setIsDragging(true);
-
-      // Remove transition during drag
       bottomSheet.style.transition = "none";
-
-      // Add class for visual feedback
       bottomSheet.classList.add("grabbing");
     };
 
@@ -63,18 +73,20 @@ function UserDashboard() {
       const touch = e.touches[0];
       const deltaY = touch.clientY - dragStartY.current;
 
-      // Enhanced damping for smoother drag
+      // Only allow downward drag when sheet is open
+      if (deltaY < 0 && showPanel) return;
+
+      // Only allow upward drag when sheet is closed
+      if (deltaY > 0 && !showPanel) return;
+
       const dampingFactor = 0.5;
       const dampenedDelta =
         Math.sign(deltaY) * Math.pow(Math.abs(deltaY), dampingFactor);
-
-      // Limit the drag range
       const maxDrag = window.innerHeight * 0.3;
       const clampedDelta = Math.max(Math.min(dampenedDelta, maxDrag), -maxDrag);
 
       currentY.current = deltaY;
 
-      // Smooth animation during drag
       gsap.to(bottomSheet, {
         y: clampedDelta,
         duration: 0.1,
@@ -109,7 +121,6 @@ function UserDashboard() {
       }
     };
 
-    // Add event listeners
     bottomSheet.addEventListener("touchstart", handleTouchStart, {
       passive: true,
     });
@@ -118,29 +129,24 @@ function UserDashboard() {
     });
     bottomSheet.addEventListener("touchend", handleTouchEnd);
 
-    // Cleanup
     return () => {
       bottomSheet.removeEventListener("touchstart", handleTouchStart);
       bottomSheet.removeEventListener("touchmove", handleTouchMove);
       bottomSheet.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [showPanel, isDragging]);
+  }, [showPanel, isDragging, isMobile]);
 
-  // Handle panel toggle
   const togglePanel = () => {
+    if (!isMobile || !bottomSheetRef.current) return;
+
     const bottomSheet = bottomSheetRef.current;
-    if (!bottomSheet) return;
 
     if (!showPanel) {
       setShowPanel(true);
       gsap.fromTo(
         bottomSheet,
         { y: "100%" },
-        {
-          y: 0,
-          duration: 0.6,
-          ease: "expo.out",
-        }
+        { y: 0, duration: 0.6, ease: "expo.out" }
       );
     } else {
       gsap.to(bottomSheet, {
@@ -155,70 +161,79 @@ function UserDashboard() {
   return (
     <div ref={dashboardRef} className="min-h-screen bg-black">
       <div className="relative h-[calc(100vh-64px)]">
+        {/* Map View */}
         <div className="absolute inset-0">
-          <MapPreview />
+          <LiveTracking />
         </div>
 
-        {/* Mobile Search Button */}
-        {!showPanel && (
-          <button
-            onClick={togglePanel}
-            className="absolute top-4 left-4 right-4 z-10 md:hidden p-4 bg-black/90 
-                     backdrop-blur-xl rounded-full shadow-lg text-white border 
-                     border-white/10 hover:border-white/20 transition-all duration-300 
-                     flex items-center gap-3 cursor-pointer transform hover:scale-[0.98] 
-                     active:scale-95"
-          >
-            <Menu className="w-5 h-5" />
-            <span className="text-sm font-medium">Where to?</span>
-          </button>
+        {/* Mobile Search Button - Fixed positioning in viewport */}
+        {!showPanel && isMobile && (
+          <div className="absolute top-4 left-0 right-0 px-4 z-10">
+            <button
+              onClick={togglePanel}
+              className="w-full bg-black/90 backdrop-blur-xl rounded-full shadow-lg 
+                     border border-white/10 hover:border-white/20 transition-all 
+                     duration-300 flex items-center gap-3 p-4 cursor-pointer 
+                     transform hover:scale-[0.98] active:scale-95"
+            >
+              <Menu className="w-5 h-5 text-white" />
+              <span className="text-sm text-white font-medium">Where to?</span>
+            </button>
+          </div>
         )}
 
-        {/* Bottom Sheet for Mobile / Side Panel for Desktop */}
+        {/* Bottom Sheet / Side Panel */}
         <div
           ref={bottomSheetRef}
           className={`fixed md:absolute ${
             showPanel
               ? "bottom-0 md:bottom-auto"
               : "-bottom-full md:bottom-auto"
-          } left-0 right-0 md:left-0 md:w-[400px] z-20 h-[85vh] md:h-full
+          } left-0 right-0 md:left-0 md:w-[400px] z-20 
           will-change-transform backdrop-blur-lg
+          ${isMobile ? "h-[85vh]" : "h-full"}
           ${
-            isDragging
-              ? "transition-none touch-none"
-              : "transition-transform duration-500 ease-out"
+            isMobile
+              ? isDragging
+                ? "transition-none touch-none"
+                : "transition-transform duration-500 ease-out"
+              : ""
           }`}
+          style={{ transform: !isMobile ? "none" : undefined }}
         >
           <div
-            className="h-full bg-black/95 backdrop-blur-xl shadow-2xl flex 
-                       flex-col rounded-t-3xl md:rounded-none"
+            className="h-full bg-black/95 backdrop-blur-xl shadow-2xl 
+                       flex flex-col rounded-t-3xl md:rounded-none overflow-hidden"
           >
-            {/* Drag Handle */}
-            <div className="md:hidden w-full p-3 flex justify-center">
-              <div
-                className={`w-12 h-1.5 bg-white/20 rounded-full transition-opacity 
+            {/* Drag Handle - Mobile Only */}
+            {isMobile && (
+              <div className="w-full p-3 flex justify-center shrink-0">
+                <div
+                  className={`w-12 h-1.5 bg-white/20 rounded-full transition-opacity 
                            duration-200 ${isDragging ? "opacity-50" : ""}`}
-              />
-            </div>
+                />
+              </div>
+            )}
 
             {/* Close Button - Mobile Only */}
-            <div className="p-4 border-b border-white/10 md:hidden">
-              <button
-                onClick={togglePanel}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors 
+            {isMobile && (
+              <div className="p-4 border-b border-white/10 shrink-0">
+                <button
+                  onClick={togglePanel}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors 
                          cursor-pointer transform hover:scale-[0.98] active:scale-95"
-              >
-                <X className="w-6 h-6 text-white" />
-              </button>
-            </div>
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+              </div>
+            )}
 
-            {/* Content */}
-            <div
-              className="flex-1 overflow-auto p-4 space-y-6 custom-scrollbar 
-                         overscroll-contain"
-            >
-              <SearchPanel />
-              <RideOptions />
+            {/* Content Area - Improved scrolling */}
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="p-4 space-y-6 custom-scrollbar overscroll-contain">
+                <SearchPanel />
+                <RideOptions />
+              </div>
             </div>
           </div>
         </div>

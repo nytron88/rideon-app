@@ -1,21 +1,30 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Car, Truck, Users, Clock, Star } from "lucide-react";
 import gsap from "gsap";
+import RideConfirmation from "./RideConfirmation";
+import WaitingForCaptain from "./WaitingForCaptain";
+import RideAccepted from "./RideAccepted";
 
 function RideOptions() {
+  const [step, setStep] = useState('selecting'); // selecting, confirming, waiting, accepted
+  const [selectedRide, setSelectedRide] = useState(null);
   const containerRef = useRef(null);
   const optionsRef = useRef([]);
 
   const options = [
     {
+      id: 'regular',
       icon: <Car className="w-6 h-6" />,
       name: "Regular",
       price: "$12-15",
       time: "3 min away",
       rating: "4.8",
       color: "from-blue-600 to-blue-400",
+      estimatedTime: "15-20",
+      distance: "5.2",
     },
     {
+      id: 'premium',
       icon: <Users className="w-6 h-6" />,
       name: "Premium",
       price: "$18-22",
@@ -24,6 +33,7 @@ function RideOptions() {
       color: "from-purple-600 to-purple-400",
     },
     {
+      id: 'van',
       icon: <Truck className="w-6 h-6" />,
       name: "Van",
       price: "$25-30",
@@ -32,6 +42,24 @@ function RideOptions() {
       color: "from-pink-600 to-pink-400",
     },
   ];
+
+  const handleRideSelect = (ride) => {
+    setSelectedRide(ride);
+    setStep('confirming');
+  };
+
+  const handleConfirm = () => {
+    setStep('waiting');
+    // Simulate API call and captain accepting after delay
+    setTimeout(() => {
+      setStep('accepted');
+    }, 3000);
+  };
+
+  const handleCancel = () => {
+    setSelectedRide(null);
+    setStep('selecting');
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -57,6 +85,24 @@ function RideOptions() {
     );
   }, []);
 
+  if (step === 'confirming') {
+    return (
+      <RideConfirmation 
+        ride={selectedRide}
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
+    );
+  }
+
+  if (step === 'waiting') {
+    return <WaitingForCaptain onCancel={handleCancel} />;
+  }
+
+  if (step === 'accepted') {
+    return <RideAccepted ride={selectedRide} />;
+  }
+
   return (
     <div 
       ref={containerRef}
@@ -67,8 +113,9 @@ function RideOptions() {
       <div className="space-y-3">
         {options.map((option, index) => (
           <button
-            key={index}
+            key={option.id}
             ref={el => optionsRef.current[index] = el}
+            onClick={() => handleRideSelect(option)}
             className="w-full flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 
                      border border-white/10 transition-all duration-300 group"
           >
