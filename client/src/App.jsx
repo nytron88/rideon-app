@@ -3,7 +3,7 @@ import { Outlet } from "react-router-dom";
 import { getUserProfile } from "./store/slices/userSlice";
 import apiClient from "./services/api";
 import { useDispatch, useSelector } from "react-redux";
-import { Footer, Header, Loader, Error } from "./components";
+import { Header, Loader, Error } from "./components";
 
 function App() {
   const [healthCheckError, setHealthCheckError] = useState("");
@@ -58,7 +58,6 @@ function App() {
     <div>
       <Header />
       <Outlet />
-      <Footer />
     </div>
   );
 }
