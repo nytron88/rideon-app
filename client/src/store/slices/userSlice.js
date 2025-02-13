@@ -86,6 +86,21 @@ export const deleteVehicle = createAsyncThunk(
   }
 );
 
+export const createStripeAccount = createAsyncThunk(
+  "user/createStripeAccount",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("user/create-stripe-account");
+      return response.data.data;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      return rejectWithValue("An unexpected error occurred. Please try again.");
+    }
+  }
+);
+
 const userSlice = createSlice({
   initialState,
   name: "user",
@@ -153,6 +168,18 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(deleteVehicle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createStripeAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createStripeAccount.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+      })
+      .addCase(createStripeAccount.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

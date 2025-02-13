@@ -11,7 +11,13 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { AuthLayout, Error } from "./components";
-import { Home, GetStarted, CaptainVehicle, UserDashboard } from "./pages";
+import {
+  Home,
+  GetStarted,
+  CaptainVehicle,
+  UserDashboard,
+  CaptainOnboarding,
+} from "./pages";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -33,7 +39,7 @@ const router = createBrowserRouter(
           </AuthLayout>
         }
       />
-      <Route 
+      <Route
         path="user/dashboard"
         element={
           <AuthLayout authentication={true} allowedRole="user">
@@ -42,9 +48,14 @@ const router = createBrowserRouter(
         }
       />
       <Route
-        path="*"
-        element={<Error code={404} message="Page not found" />}
+        path="captain/onboarding"
+        element={
+          <AuthLayout authentication={true} allowedRole="captain">
+            <CaptainOnboarding />
+          </AuthLayout>
+        }
       />
+      <Route path="*" element={<Error code={404} message="Page not found" />} />
     </Route>
   )
 );

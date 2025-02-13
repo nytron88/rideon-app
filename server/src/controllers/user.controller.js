@@ -25,8 +25,8 @@ const addRole = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  if (user.role === "captain") {
-    throw new ApiError(400, "You are already a captain");
+  if (user.role === role) {
+    throw new ApiError(400, `You are already a ${role}`);
   }
 
   if (role === "captain") {
@@ -55,11 +55,11 @@ const updateStatus = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  if (user.role !== "captain") {
-    throw new ApiError(403, "Only captains can change their status");
+  if (status === "active" && !user.stripeAccountId) {
+    throw new ApiError(400, "Please create a stripe account first");
   }
 
-  if (!user.vehicle) {
+  if (status === "active" && !user.vehicle) {
     throw new ApiError(400, "Please add vehicle details first");
   }
 

@@ -16,7 +16,7 @@ router.use(verifyLogin);
 
 router.get("/profile", getUserProfile);
 router.put("/role", addRole);
-router.put("/status", updateStatus);
+router.put("/status", requireCaptain, updateStatus);
 router.post("/create-stripe-account", requireCaptain, createStripeAccount);
 router.post("/vehicle", requireCaptain, registerVehicle);
 router.delete("/vehicle", requireCaptain, deleteVehicle);

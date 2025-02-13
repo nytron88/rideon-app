@@ -4,7 +4,17 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 import { addRole, updateStatus } from "../../store/slices/userSlice";
 import Logo from "../../assets/logo.svg";
-import { LogOut, ChevronDown, Car } from "lucide-react";
+import { toast } from "react-toastify";
+import { ToastContainer } from "../index";
+import {
+  LogOut,
+  ChevronDown,
+  Car,
+  PenSquare,
+  Plus,
+  Wallet,
+  UserMinus,
+} from "lucide-react";
 
 const Header = () => {
   const { isAuthenticated } = useSelector((state) => state.auth);
@@ -17,12 +27,14 @@ const Header = () => {
   const handleLogout = () => dispatch(logout());
 
   const handleBecomeCaptain = async () => {
+    setIsDropdownOpen(false);
     try {
       await dispatch(addRole({ role: "captain" })).unwrap();
-      navigate("/captain/vehicle");
-      setIsDropdownOpen(false);
+      toast.success(
+        "Successfully became a captain, to continue please connect with stripe and add vehicle details, if you haven't already"
+      );
     } catch (error) {
-      console.error("Failed to become captain:", error);
+      toast.error(error?.message || "An error occurred");
     }
   };
 
@@ -35,7 +47,27 @@ const Header = () => {
       ).unwrap();
       setIsDropdownOpen(false);
     } catch (error) {
-      console.error("Failed to update status:", error);
+      toast.error(error?.message || "An error occurred");
+    }
+  };
+
+  const handleVehicleAction = () => {
+    setIsDropdownOpen(false);
+    navigate("/captain/vehicle");
+  };
+
+  const handleStripeConnect = () => {
+    setIsDropdownOpen(false);
+    navigate("/captain/onboarding");
+  };
+
+  const handleRevertToUser = async () => {
+    try {
+      await dispatch(addRole({ role: "user" })).unwrap();
+      setIsDropdownOpen(false);
+      toast.success("Successfully reverted to user");
+    } catch (error) {
+      toast.error(error?.message || "An error occurred");
     }
   };
 
@@ -65,6 +97,8 @@ const Header = () => {
           />
           <span className="text-2xl font-bold tracking-wide">Ride On</span>
         </Link>
+
+        <ToastContainer />
 
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
@@ -133,23 +167,57 @@ const Header = () => {
                   </button>
                 ) : (
                   user.role === "captain" && (
-                    <button
-                      onClick={handleToggleStatus}
-                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg 
-                      ${
-                        user.status === "active"
-                          ? "text-yellow-500 hover:bg-yellow-500/10"
-                          : "text-green-500 hover:bg-green-500/10"
-                      } 
-                      transition-colors text-sm sm:text-base cursor-pointer`}
-                    >
-                      <Car className="w-4 h-4" />
-                      <span>
-                        {user.status === "active"
-                          ? "Switch to User Mode"
-                          : "Switch to Captain Mode"}
-                      </span>
-                    </button>
+                    <>
+                      {!user.stripeAccountId && (
+                        <button
+                          onClick={handleStripeConnect}
+                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-blue-500 hover:bg-blue-500/10 transition-colors text-sm sm:text-base cursor-pointer"
+                        >
+                          <Wallet className="w-4 h-4" />
+                          <span>Connect with Stripe</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={handleVehicleAction}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-blue-500 hover:bg-blue-500/10 transition-colors text-sm sm:text-base cursor-pointer"
+                      >
+                        {user.vehicle ? (
+                          <>
+                            <PenSquare className="w-4 h-4" />
+                            <span>Edit Vehicle</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            <span>Add Vehicle</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={handleToggleStatus}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg 
+                        ${
+                          user.status === "active"
+                            ? "text-yellow-500 hover:bg-yellow-500/10"
+                            : "text-green-500 hover:bg-green-500/10"
+                        } 
+                        transition-colors text-sm sm:text-base cursor-pointer`}
+                      >
+                        <Car className="w-4 h-4" />
+                        <span>
+                          {user.status === "active"
+                            ? "Become Inactive"
+                            : "Become Active"}
+                        </span>
+                      </button>
+                      <button
+                        onClick={handleRevertToUser}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-orange-500 hover:bg-orange-500/10 transition-colors text-sm sm:text-base cursor-pointer"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                        <span>Revert to User</span>
+                      </button>
+                    </>
                   )
                 )}
                 <button
