@@ -21,7 +21,9 @@ function AuthLayout({ children, authentication = true, allowedRole = null }) {
     if (authentication && authStatus && allowedRole) {
       if (user?.role !== allowedRole) {
         navigate(
-          user?.role === "captain" ? "/captain/dashboard" : "/user/dashboard"
+          user?.role === "captain" && user?.status === "active"
+            ? "/captain/dashboard"
+            : "/user/dashboard"
         );
         return;
       }

@@ -30,7 +30,7 @@ export const addRole = createAsyncThunk(
   "user/addRole",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("user/role", data);
+      const response = await apiClient.put("user/role", data);
       return response.data.data;
     } catch (error) {
       if (error.response && error.response.data) {

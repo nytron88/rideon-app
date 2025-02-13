@@ -2,7 +2,7 @@ import auth from "../services/firebaseAdminService.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 
-const verifyAuthBlockingToken = asyncHandler(async (req, res, next) => {
+const verifyAuthBlockingToken = asyncHandler(async (req, _, next) => {
   const idToken = req.header("Authorization")?.replace("Bearer ", "");
 
   if (!idToken) {
@@ -12,6 +12,7 @@ const verifyAuthBlockingToken = asyncHandler(async (req, res, next) => {
   try {
     const decodedToken = await auth.verifyIdToken(idToken);
     req.user = {
+      uid: decodedToken.uid,
       email: decodedToken.email,
       name: decodedToken.name,
       photo: decodedToken.picture,

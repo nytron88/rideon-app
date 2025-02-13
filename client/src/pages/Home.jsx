@@ -4,12 +4,18 @@ import { useSelector } from "react-redux";
 import { ArrowRight, Clock, Shield, MapPin, Users } from "lucide-react";
 import Logo from "../assets/logo.svg";
 import { Footer } from "../components";
+import { CaptainDashboard, UserDashboard } from "./index";
 
 function Home() {
   const { isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
 
-  if (isAuthenticated) {
-    return <div className="text-white">Authenticated Home Page</div>;
+  if (isAuthenticated && user) {
+    return user.role === "captain" && user.status === "active" ? (
+      <CaptainDashboard />
+    ) : (
+      <UserDashboard />
+    );
   }
 
   return (

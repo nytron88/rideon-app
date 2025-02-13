@@ -18,7 +18,7 @@ export const googleAuth = createAsyncThunk(
           Authorization: `Bearer ${idToken}`,
         },
       });
-      dispatch(setUser(response.data));
+      dispatch(setUser(response.data.data.user));
       return response.data.data.user;
     } catch (error) {
       if (error.response && error.response.data) {

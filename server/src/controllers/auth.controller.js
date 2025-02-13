@@ -27,16 +27,16 @@ const generateAccessAndRefreshToken = async (userId) => {
 };
 
 const google = asyncHandler(async (req, res) => {
-  const { name: fullname, email, photo } = req.body;
+  const { uid, name: fullname, email, photo } = req.user;
 
-  if (!email || !fullname || !photo) {
+  if (!uid || !email || !fullname || !photo) {
     throw new ApiError(400, "Missing required fields");
   }
 
-  let user = await User.findOne({ email });
+  let user = await User.findOne({ uid });
 
   if (!user) {
-    user = await User.create({ fullname, email, photo, role: "user" });
+    user = await User.create({ uid, fullname, email, photo, role: "user" });
   }
 
   const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -58,6 +58,7 @@ const google = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async (req, res) => {
   await client.del(`refreshToken:${req.user?._id}`);
+  await client.del(`user:${req.user?._id}`);
   await client.set(`blacklist:${req.cookies?.accessToken}`, "", "EX", 30);
 
   const options = {

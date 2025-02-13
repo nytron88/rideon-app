@@ -34,7 +34,7 @@ const addRole = asyncHandler(async (req, res) => {
   }
 
   user.role = role;
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   await client.del(`user:${user._id}`);
 

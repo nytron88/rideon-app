@@ -176,8 +176,10 @@ function UserDashboard() {
                      duration-300 flex items-center gap-3 p-4 cursor-pointer 
                      transform hover:scale-[0.98] active:scale-95"
             >
-              <Menu className="w-5 h-5 text-white" />
-              <span className="text-sm text-white font-medium">Where to?</span>
+              <Menu className="w-5 h-5 text-white cursor-pointer" />
+              <span className="text-sm text-white font-medium cursor-pointer">
+                Where to?
+              </span>
             </button>
           </div>
         )}
@@ -223,7 +225,7 @@ function UserDashboard() {
                   className="p-2 hover:bg-white/10 rounded-full transition-colors 
                          cursor-pointer transform hover:scale-[0.98] active:scale-95"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  <X className="w-6 h-6 text-white cursor-pointer" />
                 </button>
               </div>
             )}

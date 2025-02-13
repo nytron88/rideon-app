@@ -30,7 +30,7 @@ function GetStarted() {
 
       navigate("/");
     } catch (error) {
-      setError("Authentication failed. Please try again.");
+      setError(error?.message || "Authentication failed. Please try again.");
       console.error(error);
     } finally {
       setLoading(false);
@@ -42,13 +42,13 @@ function GetStarted() {
       <div className="container mx-auto px-4 py-12 flex-1 flex flex-col">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+          className="relative z-10 inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Home
         </Link>
 
-        <div className="max-w-md mx-auto w-full flex-1 flex flex-col justify-center -mt-12">
+        <div className="max-w-md mx-auto w-full flex-1 flex flex-col justify-center mt-6">
           <div className="text-center space-y-4 mb-12">
             <h1 className="text-4xl font-bold">Get Started</h1>
             <p className="text-gray-400">
