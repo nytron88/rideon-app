@@ -8,7 +8,8 @@ import Vehicle from "./Captain/Vehicle";
 import ToastContainer from "./Common/ToastContainer";
 import SearchPanel from "./User/SearchPanel";
 import LiveTracking from "./User/LiveTracking";
-import RideOptions from "./User/RideOptions";
+import InactiveCaptain from "./Captain/InactiveCaptain";
+import RideRequest from "./Captain/RideRequest";
 
 export {
   AuthLayout,
@@ -21,5 +22,6 @@ export {
   ToastContainer,
   SearchPanel,
   LiveTracking,
-  RideOptions,
+  InactiveCaptain,
+  RideRequest,
 };

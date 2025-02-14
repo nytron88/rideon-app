@@ -51,6 +51,7 @@ const updateStatus = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(req.user._id);
+
   if (!user) {
     throw new ApiError(404, "User not found");
   }
@@ -64,7 +65,7 @@ const updateStatus = asyncHandler(async (req, res) => {
   }
 
   user.status = status;
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   await client.del(`user:${user._id}`);
 
@@ -85,6 +86,8 @@ const createStripeAccount = asyncHandler(async (req, res) => {
   await user.save({ validateBeforeSave: false });
 
   const accountLink = await createAccountLinks(account.id);
+
+  await client.del(`user:${user._id}`);
 
   return res
     .status(200)

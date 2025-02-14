@@ -11,11 +11,7 @@ function Home() {
   const { user } = useSelector((state) => state.user);
 
   if (isAuthenticated && user) {
-    return user.role === "captain" && user.status === "active" ? (
-      <CaptainDashboard />
-    ) : (
-      <UserDashboard />
-    );
+    return user.role === "captain" ? <CaptainDashboard /> : <UserDashboard />;
   }
 
   return (

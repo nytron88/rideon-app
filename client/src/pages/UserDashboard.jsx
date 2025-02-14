@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { SearchPanel, LiveTracking, RideOptions } from "../components";
+import { SearchPanel, LiveTracking } from "../components";
 import { Menu, X } from "lucide-react";
 import gsap from "gsap";
 
@@ -234,7 +234,6 @@ function UserDashboard() {
             <div className="flex-1 min-h-0 overflow-y-auto">
               <div className="p-4 space-y-6 custom-scrollbar overscroll-contain">
                 <SearchPanel />
-                <RideOptions />
               </div>
             </div>
           </div>
