@@ -264,7 +264,7 @@ function RideRequest({ ride, onAccept, onDecline }) {
             className="group px-4 sm:px-6 py-3 sm:py-3.5 bg-white hover:bg-gray-100 
                      text-black rounded-xl font-medium transition-all disabled:opacity-50 
                      flex items-center justify-center gap-2 transform hover:scale-[0.98] 
-                     active:scale-95 text-sm sm:text-base"
+                     active:scale-95 text-sm sm:text-base cursor-pointer"
           >
             {isLoading ? (
               <>
@@ -272,7 +272,7 @@ function RideRequest({ ride, onAccept, onDecline }) {
                 <span>Processing...</span>
               </>
             ) : (
-              <span className="block transform group-hover:scale-105 transition-transform cursor-pointer">
+              <span className="block transform group-hover:scale-105 transition-transform">
                 Accept
               </span>
             )}

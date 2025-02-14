@@ -20,17 +20,13 @@ function AuthLayout({ children, authentication = true, allowedRole = null }) {
 
     if (authentication && authStatus && allowedRole) {
       if (user?.role !== allowedRole) {
-        navigate(
-          user?.role === "captain" ? "/captain/dashboard" : "/user/dashboard"
-        );
+        navigate("/");
         return;
       }
     }
 
     if (!authentication && authStatus) {
-      navigate(
-        user?.role === "captain" ? "/captain/dashboard" : "/user/dashboard"
-      );
+      navigate("/");
     }
   }, [authStatus, loading, navigate, authentication, allowedRole, user]);
 

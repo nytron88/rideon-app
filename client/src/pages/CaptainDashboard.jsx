@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { LiveTracking } from "../components";
-import { InactiveCaptain, RideRequest } from "../components";
+import { InactiveCaptain, RideRequest, ActiveRide } from "../components";
 import { updateStatus } from "../store/slices/userSlice";
 import { toast } from "react-toastify";
 import gsap from "gsap";
@@ -13,7 +13,7 @@ function CaptainDashboard() {
   const [showRequest, setShowRequest] = useState(false);
 
   const isActive = user?.status === "active";
-  
+
   // Simulated ride request - replace with real data
   const rideData = {
     id: "ride123",
@@ -77,11 +77,15 @@ function CaptainDashboard() {
       <div className="relative h-[calc(100vh-64px)]">
         {/* Status Bar */}
         <div className="absolute top-4 left-4 right-4 z-10">
-          <div className="bg-black/90 backdrop-blur-xl rounded-xl p-4 border border-white/10 
-                       shadow-lg flex items-center justify-between">
+          <div
+            className="bg-black/90 backdrop-blur-xl rounded-xl p-4 border border-white/10 
+                       shadow-lg flex items-center justify-between"
+          >
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-white font-medium">Active - Ready for rides</span>
+              <span className="text-white font-medium">
+                Active - Ready for rides
+              </span>
             </div>
             {currentRide && (
               <span className="text-gray-400">
@@ -93,19 +97,43 @@ function CaptainDashboard() {
 
         {/* Map */}
         <div className="absolute inset-0">
-          <LiveTracking />
+          <LiveTracking
+            origin={currentRide?.pickup}
+            destination={currentRide?.destination}
+            isRideActive={!!currentRide}
+          />
         </div>
 
         {/* Ride Request Popup */}
-        {showRequest && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm 
-                       flex items-center justify-center p-4 z-20 animate-in fade-in">
+        {showRequest && !currentRide && (
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm 
+                       flex items-center justify-center p-4 z-20"
+          >
             <RideRequest
               ride={rideData}
               onAccept={handleAcceptRide}
               onDecline={handleDeclineRide}
             />
           </div>
+        )}
+
+        {/* Active Ride Panel */}
+        {currentRide && (
+          <ActiveRide
+            ride={currentRide}
+            onStartRide={() => {
+              // Handle ride start
+              toast.success("Ride started successfully!");
+            }}
+            onVerifyOTP={async (code) => {
+              // Verify OTP logic
+              if (code !== ride.otp) {
+                toast.error("Invalid verification code");
+                throw new Error("Invalid code");
+              }
+            }}
+          />
         )}
       </div>
     </div>

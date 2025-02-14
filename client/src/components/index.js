@@ -7,9 +7,10 @@ import Error from "./Common/Error";
 import Vehicle from "./Captain/Vehicle";
 import ToastContainer from "./Common/ToastContainer";
 import SearchPanel from "./User/SearchPanel";
-import LiveTracking from "./User/LiveTracking";
+import LiveTracking from "./Common/LiveTracking";
 import InactiveCaptain from "./Captain/InactiveCaptain";
 import RideRequest from "./Captain/RideRequest";
+import ActiveRide from "./Captain/ActiveRide";
 
 export {
   AuthLayout,
@@ -24,4 +25,5 @@ export {
   LiveTracking,
   InactiveCaptain,
   RideRequest,
+  ActiveRide,
 };
