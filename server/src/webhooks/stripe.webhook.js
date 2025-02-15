@@ -1,8 +1,8 @@
-import { verifyWebhook } from "../services/stripeService.js";
+import { verifyWebhook } from "../services/stripe.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Ride } from "../models/ride.model.js";
-import client from "../services/redisService.js";
+import client from "../services/redis.service.js";
 
 const webhookController = asyncHandler(async (req, res) => {
   const event = verifyWebhook(req);

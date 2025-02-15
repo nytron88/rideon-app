@@ -1,4 +1,4 @@
-import client from "../services/redisService.js";
+import client from "../services/redis.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 

@@ -24,12 +24,14 @@ app.use(rateLimiter);
 
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
-import healthcheckRouter from "./routes/healthcheck.routes.js";
 import rideRouter from "./routes/ride.routes.js";
+import mapsRouter from "./routes/maps.routes.js";
+import healthcheckRouter from "./routes/healthcheck.routes.js";
 import webhookRouter from "./routes/webhook.routes.js";
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/maps", mapsRouter);
 app.use("/api/v1/healthcheck", healthcheckRouter);
 app.use("/api/v1/ride", rideRouter);
 app.use("/api/v1/webhook", webhookRouter);

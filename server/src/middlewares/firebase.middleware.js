@@ -1,4 +1,4 @@
-import auth from "../services/firebaseAdminService.js";
+import auth from "../services/firebaseAdmin.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 

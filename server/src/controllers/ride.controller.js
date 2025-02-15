@@ -2,8 +2,8 @@ import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { Ride } from "../models/ride.model.js";
-import client from "../services/redisService.js";
-import { createPaymentIntent as createPaymentIntentService } from "../services/stripeService.js";
+import client from "../services/redis.service.js";
+import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
   const { amount, captainId, pickup, destination, duration, distance } =
