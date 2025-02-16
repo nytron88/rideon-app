@@ -1,38 +1,41 @@
 import { useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getLocationSuggestions,
+  clearSuggestions,
+} from "../store/slices/mapSlice";
+import debounce from "lodash/debounce";
 
 export function useLocationSearch() {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { suggestions, loading } = useSelector((state) => state.map);
 
-  // TODO: Replace with Google Places Autocomplete
-  const search = useCallback((searchTerm) => {
-    setQuery(searchTerm);
+  // Debounce the API call
+  const debouncedSearch = useCallback(
+    debounce((searchTerm) => {
+      if (searchTerm.length >= 2) {
+        dispatch(getLocationSuggestions(searchTerm));
+      } else {
+        dispatch(clearSuggestions());
+      }
+    }, 300),
+    [dispatch]
+  );
 
-    if (searchTerm.length < 2) {
-      setResults([]);
-      return;
-    }
+  const search = useCallback(
+    (searchTerm) => {
+      setQuery(searchTerm);
+      debouncedSearch(searchTerm);
+    },
+    [debouncedSearch]
+  );
 
-    setIsLoading(true);
-
-    // PLACEHOLDER: Replace this mock implementation with Google Places API
-    setTimeout(() => {
-      // Mock data structure matching Google Places Autocomplete predictions
-      const mockResults = [
-        {
-          place_id: "1",
-          structured_formatting: {
-            main_text: `${searchTerm} Station`,
-            secondary_text: "Railway Square, Downtown",
-          },
-          description: `${searchTerm} Station, Railway Square, Downtown`,
-        },
-      ];
-      setResults(mockResults);
-      setIsLoading(false);
-    }, 300);
-  }, []);
-
-  return { query, results, isLoading, search, setQuery };
+  return {
+    query,
+    results: suggestions,
+    isLoading: loading,
+    search,
+    setQuery,
+  };
 }

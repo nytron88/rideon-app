@@ -15,24 +15,28 @@ export const getAddressCoordinate = async (address) => {
 
   try {
     const response = await axios.get(url);
+
     if (response.data.status === "OK") {
       const location = response.data.results[0].geometry.location;
       return {
         ltd: location.lat,
         lng: location.lng,
       };
-    } else {
-      throw new ApiError(400, "Unable to fetch location");
     }
+
+    throw new ApiError(400, "Location not found");
   } catch (error) {
-    console.error("Error in getAddressCoordinate:", error);
-    throw new ApiError(400, error?.message || "Unable to fetch location");
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(400, "Unable to find this location");
   }
 };
 
 export const getDistanceTime = async (origin, destination) => {
   if (!origin || !destination) {
-    throw new ApiError(400, "Origin and destination are required");
+    throw new ApiError(
+      400,
+      "Both pickup and destination locations are required"
+    );
   }
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -44,33 +48,58 @@ export const getDistanceTime = async (origin, destination) => {
 
   try {
     const response = await axios.get(url);
-    if (response.data.status === "OK") {
-      const element = response.data.rows[0].elements[0];
 
-      if (element.status === "ZERO_RESULTS") {
-        throw new ApiError(400, "No routes found between these locations");
-      }
-
-      return {
-        distance: parseFloat(element.distance.text.replace(" mi", "")),
-        duration: Math.ceil(element.duration.value / 60),
-        raw: element,
-      };
-    } else {
-      throw new ApiError(400, "Unable to calculate distance and time");
+    if (response.data.status !== "OK") {
+      throw new ApiError(400, "Please check your location details");
     }
+
+    const element = response.data.rows?.[0]?.elements?.[0];
+    if (!element) {
+      throw new ApiError(400, "No route found between these locations");
+    }
+
+    if (element.status !== "OK") {
+      const errorMessages = {
+        NOT_FOUND: "We couldn't find one or both locations",
+        ZERO_RESULTS: "No driving route available between these locations",
+        MAX_ROUTE_LENGTH_EXCEEDED: "This route is too long",
+        INVALID_REQUEST: "Please check your location details",
+      };
+      throw new ApiError(
+        400,
+        errorMessages[element.status] || "No route available"
+      );
+    }
+
+    if (!element.distance?.text || !element.duration?.value) {
+      throw new ApiError(400, "Route details unavailable");
+    }
+
+    const distanceText = element.distance.text;
+    let distance;
+
+    if (distanceText.includes("mi")) {
+      distance = parseFloat(distanceText.replace(/[^0-9.]/g, ""));
+    } else if (distanceText.includes("ft")) {
+      distance = parseFloat(distanceText.replace(/[^0-9.]/g, "")) / 5280;
+    } else {
+      throw new ApiError(400, "Invalid distance format received");
+    }
+
+    return {
+      distance: Number(distance.toFixed(2)),
+      duration: Math.ceil(element.duration.value / 60),
+      raw: element,
+    };
   } catch (error) {
-    console.error("Error in getDistanceTime:", error);
-    throw new ApiError(
-      400,
-      error?.message || "Failed to get route information"
-    );
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(400, "Unable to calculate route");
   }
 };
 
 export const getAutoCompleteSuggestions = async (input) => {
   if (!input) {
-    throw new ApiError(400, "Search query is required");
+    throw new ApiError(400, "Please enter a location to search");
   }
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -80,19 +109,18 @@ export const getAutoCompleteSuggestions = async (input) => {
 
   try {
     const response = await axios.get(url);
+
     if (response.data.status === "OK") {
-      return response.data.predictions
-        .map((prediction) => prediction.description)
-        .filter(Boolean);
-    } else {
-      throw new ApiError(400, "Unable to fetch location suggestions");
+      return response.data.predictions.map((prediction) => ({
+        description: prediction.description,
+        placeId: prediction.place_id,
+      }));
     }
+
+    throw new ApiError(400, "No locations found");
   } catch (error) {
-    console.error("Error in getAutoCompleteSuggestions:", error);
-    throw new ApiError(
-      400,
-      error?.message || "Failed to get location suggestions"
-    );
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(400, "Unable to get location suggestions");
   }
 };
 
@@ -102,14 +130,13 @@ export const updateCaptainLocation = async (captainId, ltd, lng) => {
     await client.expire("captain:locations", 300);
     return true;
   } catch (error) {
-    console.error("Error updating captain location:", error);
-    throw new ApiError(500, "Failed to update captain location");
+    throw new ApiError(500, "Unable to update location");
   }
 };
 
 export const getCaptainsInTheRadius = async (ltd, lng, radius = 3) => {
   if (!ltd || !lng) {
-    throw new ApiError(400, "Coordinates are required");
+    throw new ApiError(400, "Location coordinates required");
   }
 
   try {
@@ -122,9 +149,7 @@ export const getCaptainsInTheRadius = async (ltd, lng, radius = 3) => {
       "WITHCOORD"
     );
 
-    if (!nearbyLocations.length) {
-      return [];
-    }
+    if (!nearbyLocations.length) return [];
 
     const captainIds = nearbyLocations.map((location) => location[0]);
 
@@ -155,7 +180,6 @@ export const getCaptainsInTheRadius = async (ltd, lng, radius = 3) => {
       })
       .filter(Boolean);
   } catch (error) {
-    console.error("Error in getCaptainsInTheRadius:", error);
-    throw new ApiError(500, "Failed to fetch nearby captains");
+    throw new ApiError(500, "Unable to find nearby drivers");
   }
 };

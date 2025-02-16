@@ -10,7 +10,6 @@ const rideSchema = new mongoose.Schema(
     captain: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
     },
     pickup: {
       type: String,
@@ -31,15 +30,13 @@ const rideSchema = new mongoose.Schema(
     },
     duration: {
       type: Number,
+      required: true,
     },
     distance: {
       type: Number,
-    },
-    stripePaymentIntentId: {
-      type: String,
       required: true,
     },
-    paymentID: {
+    stripePaymentIntentId: {
       type: String,
     },
     otp: {

@@ -12,7 +12,7 @@ const getCoordinates = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    throw new ApiError(400, { errors: errors.array() }, "Validation failed");
+    throw new ApiError(400, "Validation failed", errors.array());
   }
 
   const { address } = req.query;
@@ -21,17 +21,19 @@ const getCoordinates = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Address is required");
   }
 
-  const coordinates = await getAddressCoordinate(address);
-
-  if (!coordinates) {
-    throw new ApiError(404, "Coordinates not found");
+  try {
+    const coordinates = await getAddressCoordinate(address);
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, coordinates, "Coordinates fetched successfully")
+      );
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, error.message || "Failed to fetch coordinates");
   }
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(200, coordinates, "Coordinates fetched successfully")
-    );
 });
 
 const getDistanceTime = asyncHandler(async (req, res) => {

@@ -1,24 +1,41 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
-import { Ride } from "../models/ride.model.js";
-import client from "../services/redis.service.js";
+import {
+  createRide as createRideService,
+  getFare,
+  updateRidePayment,
+} from "../services/ride.service.js";
 import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
 
-const createPaymentIntent = asyncHandler(async (req, res) => {
-  const { amount, captainId, pickup, destination, duration, distance } =
-    req.body;
-  const rider = req.user;
+const createRide = asyncHandler(async (req, res) => {
+  const { pickup, destination } = req.body;
 
-  if (
-    !amount ||
-    !captainId ||
-    !pickup ||
-    !destination ||
-    !duration ||
-    !distance
-  ) {
-    throw new ApiError(400, "Amount and captainId are required");
+  const { fare, distance, duration } = await getFare(pickup, destination);
+
+  if (!fare || !distance || !duration) {
+    throw new ApiError(400, "Failed to calculate fare");
+  }
+
+  const ride = await createRideService({
+    user: req.user._id,
+    pickup,
+    destination,
+    fare,
+    duration,
+    distance,
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(200, ride, "Ride created successfully"));
+});
+
+const createPaymentIntent = asyncHandler(async (req, res) => {
+  const { amount, captainId, rideId } = req.body;
+
+  if (!amount || !captainId || !rideId) {
+    throw new ApiError(400, "Amount, captainId, and rideId are required");
   }
 
   const captain = await User.findById(captainId);
@@ -36,27 +53,15 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     captain.stripeAccountId
   );
 
-  const ride = new Ride({
-    user: rider._id,
-    captain: captain._id,
-    pickup,
-    destination,
-    fare: amount,
-    duration,
-    distance,
-    status: "pending",
-    stripePaymentIntentId: paymentIntent.id,
-  });
+  if (!paymentIntent) {
+    throw new ApiError(500, "Failed to create payment intent");
+  }
 
-  await ride.save();
-
-  await client.set(`ride:${ride._id}`, JSON.stringify(ride), "EX", 86400);
+  const ride = await updateRidePayment(rideId, paymentIntent.id);
 
   return res
     .status(201)
-    .json(
-      new ApiResponse(200, paymentIntent, "Payment intent created successfully")
-    );
+    .json(new ApiResponse(200, ride, "Payment intent created successfully"));
 });
 
-export { createPaymentIntent };
+export { createRide, createPaymentIntent };

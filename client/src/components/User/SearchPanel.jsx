@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   ArrowRight,
   MapPin,
@@ -8,40 +8,70 @@ import {
   DollarSign,
 } from "lucide-react";
 import SearchInput from "./SearchInput";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocationSearch } from "../../hooks/useLocationSearch";
+import {
+  getCoordinates,
+  setPickupCoordinates,
+  setDestinationCoordinates,
+  getDistanceTime,
+  clearSuggestions,
+} from "../../store/slices/mapSlice";
 
 function SearchPanel() {
   const [activeField, setActiveField] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
   const [riderCount, setRiderCount] = useState(1);
+  const [error, setError] = useState(null);
+  const dispatch = useDispatch();
   const pickup = useLocationSearch();
   const destination = useLocationSearch();
+  const { distance, duration, fare } = useSelector((state) => state.map);
 
-  // Check if mobile on mount and window resize
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768); // 768px is our md breakpoint
-    };
+  const handleSelect = async (result, type) => {
+    try {
+      setError(null);
+      const coordinates = await dispatch(
+        getCoordinates(result.description)
+      ).unwrap();
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
+      if (type === "pickup") {
+        pickup.setQuery(result.description);
+        dispatch(setPickupCoordinates(coordinates));
+      } else {
+        destination.setQuery(result.description);
+        dispatch(setDestinationCoordinates(coordinates));
+      }
 
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+      setActiveField(null);
 
-  const handleSelect = (result) => {
-    if (!activeField) return;
-
-    const currentSearch = activeField === "pickup" ? pickup : destination;
-    currentSearch.setQuery(result.structured_formatting.main_text);
-    setActiveField(null);
+      if (pickup.query && destination.query) {
+        await dispatch(
+          getDistanceTime({
+            origin: pickup.query,
+            destination: destination.query,
+          })
+        ).unwrap();
+      }
+    } catch (err) {
+      console.error("Error in handleSelect:", err);
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to get location details"
+      );
+    }
   };
 
-  // Handle input focus
   const handleFocus = (field) => {
-    if (isMobile) {
+    if (activeField !== field) {
+      dispatch(clearSuggestions());
       setActiveField(field);
     }
+  };
+
+  const handleBlur = () => {
+    // Use setTimeout to allow click events on suggestions to fire first
+    setTimeout(() => setActiveField(null), 200);
   };
 
   return (
@@ -51,19 +81,24 @@ function SearchPanel() {
                     border border-white/10 shadow-2xl"
       >
         <h2 className="text-2xl font-bold text-white mb-6">Where to?</h2>
-
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
         <div className="space-y-4">
           <SearchInput
             placeholder="Pickup location"
             value={pickup.query}
             onChange={pickup.search}
             onFocus={() => handleFocus("pickup")}
+            onBlur={handleBlur}
             iconColor="blue"
             Icon={MapPin}
             results={pickup.results}
             isLoading={pickup.isLoading}
-            onSelect={handleSelect}
-            showResults={isMobile && activeField === "pickup"}
+            onSelect={(result) => handleSelect(result, "pickup")}
+            showResults={activeField === "pickup"}
           />
 
           <SearchInput
@@ -71,12 +106,13 @@ function SearchPanel() {
             value={destination.query}
             onChange={destination.search}
             onFocus={() => handleFocus("destination")}
+            onBlur={handleBlur}
             iconColor="purple"
             Icon={MapPin}
             results={destination.results}
             isLoading={destination.isLoading}
-            onSelect={handleSelect}
-            showResults={isMobile && activeField === "destination"}
+            onSelect={(result) => handleSelect(result, "destination")}
+            showResults={activeField === "destination"}
           />
 
           {/* Number of Riders */}
@@ -114,7 +150,7 @@ function SearchPanel() {
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">Estimated Time</span>
                 </div>
-                <p className="text-white font-medium">15-20 mins</p>
+                <p className="text-white font-medium">{duration} mins</p>
               </div>
 
               <div className="bg-white/5 rounded-xl border border-white/10 p-4">
@@ -122,7 +158,7 @@ function SearchPanel() {
                   <Navigation className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">Distance</span>
                 </div>
-                <p className="text-white font-medium">5.2 km</p>
+                <p className="text-white font-medium">{distance} miles</p>
               </div>
 
               <div className="col-span-2 bg-white/5 rounded-xl border border-white/10 p-4">
@@ -130,7 +166,9 @@ function SearchPanel() {
                   <DollarSign className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">Estimated Fare</span>
                 </div>
-                <p className="text-white font-medium">$12-15</p>
+                <p className="text-white font-medium">
+                  ${fare?.min} - ${fare?.max}
+                </p>
                 <p className="text-xs text-gray-400 mt-1">
                   Final fare may vary based on traffic and demand
                 </p>
