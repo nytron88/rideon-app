@@ -5,8 +5,6 @@ import ApiError from "../utils/ApiError.js";
 const verifyAuthBlockingToken = asyncHandler(async (req, _, next) => {
   const idToken = req.header("Authorization")?.replace("Bearer ", "");
 
-  console.log(idToken);
-
   if (!idToken) {
     throw new ApiError(401, "Invalid or expired token");
   }

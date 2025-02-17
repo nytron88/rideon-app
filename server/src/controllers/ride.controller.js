@@ -3,15 +3,18 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import {
   createRide as createRideService,
-  getFare,
+  getFare as getFareService,
   updateRidePayment,
 } from "../services/ride.service.js";
 import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
 
 const createRide = asyncHandler(async (req, res) => {
-  const { pickup, destination } = req.body;
+  const { pickup, destination, passengers } = req.body;
 
-  const { fare, distance, duration } = await getFare(pickup, destination);
+  const { fare, distance, duration } = await getFareService(
+    pickup,
+    destination
+  );
 
   if (!fare || !distance || !duration) {
     throw new ApiError(400, "Failed to calculate fare");
@@ -21,6 +24,7 @@ const createRide = asyncHandler(async (req, res) => {
     user: req.user._id,
     pickup,
     destination,
+    passengers,
     fare,
     duration,
     distance,
@@ -29,6 +33,24 @@ const createRide = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new ApiResponse(200, ride, "Ride created successfully"));
+});
+
+const getFare = asyncHandler(async (req, res) => {
+  const { pickup, destination } = req.query;
+
+  if (!pickup || !destination) {
+    throw new ApiError(400, "Pickup and destination are required");
+  }
+
+  const fare = await getFareService(pickup, destination);
+
+  if (!fare) {
+    throw new ApiError(404, "Fare not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, fare, "Fare fetched successfully"));
 });
 
 const createPaymentIntent = asyncHandler(async (req, res) => {
@@ -64,4 +86,4 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, ride, "Payment intent created successfully"));
 });
 
-export { createRide, createPaymentIntent };
+export { createRide, getFare, createPaymentIntent };

@@ -30,7 +30,16 @@ const userSchema = new mongoose.Schema(
         {
           color: { type: String, minlength: 3 },
           plate: { type: String, minlength: 3 },
-          capacity: { type: Number, min: 1 },
+          capacity: {
+            type: Number,
+            required: [true, "Vehicle capacity is required"],
+            min: [1, "Minimum capacity must be 1"],
+            max: [4, "Maximum capacity cannot exceed 4"],
+            validate: {
+              validator: Number.isInteger,
+              message: "Vehicle capacity must be a whole number",
+            },
+          },
           vehicleType: {
             type: String,
             enum: ["Sedan", "SUV", "Hatchback", "Van"],

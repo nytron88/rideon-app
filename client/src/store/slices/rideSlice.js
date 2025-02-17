@@ -3,6 +3,7 @@ import apiClient from "../../services/api";
 
 const initialState = {
   currentRide: null,
+  fare: null,
   loading: false,
   error: null,
 };
@@ -59,6 +60,23 @@ export const createPaymentIntent = createAsyncThunk(
   }
 );
 
+export const getFare = createAsyncThunk(
+  "ride/getFare",
+  async ({ pickup, destination }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get("ride/fare", {
+        params: { pickup, destination },
+      });
+      return response.data.data;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      return rejectWithValue("Unable to calculate fare. Please try again.");
+    }
+  }
+);
+
 const rideSlice = createSlice({
   name: "ride",
   initialState,
@@ -83,7 +101,7 @@ const rideSlice = createSlice({
       })
       .addCase(createRide.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.payload?.message || "Failed to create ride";
       })
       // Update Ride Status
       .addCase(updateRideStatus.pending, (state) => {
@@ -110,6 +128,21 @@ const rideSlice = createSlice({
       .addCase(createPaymentIntent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Get Fare
+      .addCase(getFare.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.fare = null;
+      })
+      .addCase(getFare.fulfilled, (state, action) => {
+        state.loading = false;
+        state.fare = action.payload;
+      })
+      .addCase(getFare.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.fare = null;
       });
   },
 });

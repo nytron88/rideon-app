@@ -19,6 +19,16 @@ const rideSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    passengers: {
+      type: Number,
+      required: true,
+      min: [1, "Minimum 1 passenger required"],
+      max: [4, "Maximum 4 passengers allowed"],
+      validate: {
+        validator: Number.isInteger,
+        message: "Passenger count must be a whole number",
+      },
+    },
     fare: {
       type: Number,
       required: true,

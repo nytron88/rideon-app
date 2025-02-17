@@ -25,11 +25,20 @@ export const createRide = async ({
   user,
   pickup,
   destination,
+  passengers,
   fare,
   duration,
   distance,
 }) => {
-  if (!user || !pickup || !destination || !fare || !duration || !distance) {
+  if (
+    !user ||
+    !pickup ||
+    !destination ||
+    !passengers ||
+    !fare ||
+    !duration ||
+    !distance
+  ) {
     throw new ApiError(400, "Missing required ride details");
   }
 
@@ -38,6 +47,7 @@ export const createRide = async ({
       user,
       pickup,
       destination,
+      passengers,
       fare,
       duration,
       distance,

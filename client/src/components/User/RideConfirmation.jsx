@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { MapPin, Clock, CreditCard, X, Navigation } from 'lucide-react';
-import gsap from 'gsap';
+import React, { useState } from "react";
+import { MapPin, CreditCard, X, Navigation } from "lucide-react";
 
 function RideConfirmation({ ride, onConfirm, onCancel }) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -17,7 +16,7 @@ function RideConfirmation({ ride, onConfirm, onCancel }) {
     <div className="bg-black/80 backdrop-blur-lg rounded-2xl p-6 w-full border border-white/10 shadow-2xl">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-semibold text-white">Confirm your ride</h3>
-        <button 
+        <button
           onClick={onCancel}
           className="p-2 hover:bg-white/10 rounded-full transition-colors"
         >
@@ -52,19 +51,15 @@ function RideConfirmation({ ride, onConfirm, onCancel }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-gray-400">Estimated Time</p>
-            <p className="text-white font-medium">{ride.estimatedTime} mins</p>
+            <p className="text-white font-medium">{ride.duration} mins</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-gray-400">Distance</p>
-            <p className="text-white font-medium">{ride.distance} km</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm text-gray-400">Vehicle Type</p>
-            <p className="text-white font-medium">{ride.name}</p>
+            <p className="text-white font-medium">{ride.distance} miles</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-gray-400">Fare</p>
-            <p className="text-white font-medium">{ride.price}</p>
+            <p className="text-white font-medium">${ride.fare}</p>
           </div>
         </div>
 
@@ -92,7 +87,7 @@ function RideConfirmation({ ride, onConfirm, onCancel }) {
                 Processing...
               </>
             ) : (
-              'Confirm Ride'
+              "Confirm Ride"
             )}
           </button>
           <button

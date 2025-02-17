@@ -9,7 +9,6 @@ const initialState = {
   suggestions: [],
   distance: null,
   duration: null,
-  fare: null,
   loading: false,
   error: null,
 };
@@ -67,23 +66,6 @@ export const getLocationSuggestions = createAsyncThunk(
   }
 );
 
-const calculateEstimatedFare = (distance, duration) => {
-  const baseFare = 5; // Base fare in dollars
-  const perMileRate = 2.5; // $2.50 per mile
-  const perMinuteRate = 0.3; // $0.30 per minute
-  const surge = 1; // Regular pricing, no surge
-
-  const fare = Math.round(
-    (baseFare + (distance * perMileRate) + (duration * perMinuteRate)) * surge
-  );
-
-  // Return a fare range (±$2)
-  return {
-    min: fare - 2,
-    max: fare + 2,
-  };
-};
-
 const mapSlice = createSlice({
   name: "map",
   initialState,
@@ -126,11 +108,6 @@ const mapSlice = createSlice({
         state.loading = false;
         state.distance = action.payload.distance;
         state.duration = action.payload.duration;
-        const estimatedFare = calculateEstimatedFare(
-          action.payload.distance,
-          action.payload.duration
-        );
-        state.fare = estimatedFare;
       })
       .addCase(getDistanceTime.rejected, (state, action) => {
         state.loading = false;
