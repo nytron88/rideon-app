@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { auth, googleProvider, githubProvider } from "../../services/firebase";
+import { auth, googleProvider, githubProvider } from "../../services/firebase.service";
 import { signInWithPopup } from "firebase/auth";
 import { googleAuth } from "../../store/slices/authSlice";
 import { ArrowLeft, Github } from "lucide-react";

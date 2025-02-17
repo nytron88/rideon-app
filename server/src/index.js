@@ -2,6 +2,7 @@ import app from "./app.js";
 import connectDB from "./db/db.js";
 import dotenv from "dotenv";
 import http from "http";
+import { initializeSocket } from "./socket.js";
 
 dotenv.config({
   path: "./.env",
@@ -9,6 +10,8 @@ dotenv.config({
 
 const PORT = process.env.PORT || 8000;
 const server = http.createServer(app);
+
+initializeSocket(server);
 
 connectDB()
   .then(() => {

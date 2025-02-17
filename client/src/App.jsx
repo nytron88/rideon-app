@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { getUserProfile } from "./store/slices/userSlice";
-import apiClient from "./services/api";
+import apiClient from "./services/api.service";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Loader, Error } from "./components";
 

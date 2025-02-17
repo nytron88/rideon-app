@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { logUser, setLoading } from "./authSlice";
-import apiClient from "../../services/api";
+import apiClient from "../../services/api.service";
 
 const initialState = {
   user: null,
