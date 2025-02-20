@@ -6,33 +6,27 @@ import {
   getFare as getFareService,
   updateRidePayment,
 } from "../services/ride.service.js";
+import { getAddressCoordinate } from "../services/maps.service.js";
 import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
+import { notifyNearbyCaptains } from "../socket.js";
 
-const createRide = asyncHandler(async (req, res) => {
+export const createRide = asyncHandler(async (req, res) => {
   const { pickup, destination, passengers } = req.body;
 
-  const { fare, distance, duration } = await getFareService(
-    pickup,
-    destination
-  );
-
-  if (!fare || !distance || !duration) {
-    throw new ApiError(400, "Failed to calculate fare");
-  }
+  const pickupCoords = await getAddressCoordinate(pickup);
 
   const ride = await createRideService({
     user: req.user._id,
     pickup,
     destination,
     passengers,
-    fare,
-    duration,
-    distance,
   });
+
+  await notifyNearbyCaptains(ride, pickupCoords);
 
   return res
     .status(201)
-    .json(new ApiResponse(200, ride, "Ride created successfully"));
+    .json(new ApiResponse(201, ride, "Ride created successfully"));
 });
 
 const getFare = asyncHandler(async (req, res) => {
@@ -86,4 +80,4 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, ride, "Payment intent created successfully"));
 });
 
-export { createRide, getFare, createPaymentIntent };
+export { getFare, createPaymentIntent };

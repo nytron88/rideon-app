@@ -4,70 +4,151 @@ import { store } from "../store/store";
 
 class SocketService {
   initialize() {
-    const socket = io(import.meta.env.VITE_API_URL, {
-      withCredentials: true,
-    });
+    try {
+      const socket = io(import.meta.env.VITE_API_URL, {
+        withCredentials: true,
+      });
 
-    socket.on("connect", () => {
-      store.dispatch(setConnected(true));
-    });
+      socket.on("connect", () => {
+        store.dispatch(setError(null));
+        store.dispatch(setConnected(true));
+      });
 
-    socket.on("disconnect", () => {
-      store.dispatch(setConnected(false));
-    });
+      socket.on("disconnect", () => {
+        store.dispatch(setConnected(false));
+      });
 
-    socket.on("connect_error", () => {
-      store.dispatch(setError("Failed to connect to server"));
-    });
+      socket.on("connect_error", (error) => {
+        store.dispatch(setError({
+          type: 'CONNECTION_ERROR',
+          message: error.message || "Failed to connect to server"
+        }));
+      });
 
-    socket.on("socket_error", ({ message }) => {
-      store.dispatch(setError(message));
-    });
+      socket.on("socket_error", ({ statusCode, event, message }) => {
+        store.dispatch(setError({
+          type: 'SOCKET_ERROR',
+          event,
+          statusCode,
+          message: message || `Error in ${event}`
+        }));
+      });
 
-    socket.on("error", (error) => {
-      store.dispatch(setError(error.message || "An unexpected error occurred"));
-    });
+      socket.on("error", (error) => {
+        store.dispatch(setError({
+          type: 'GENERAL_ERROR',
+          message: error.message || "An unexpected error occurred"
+        }));
+      });
 
-    store.dispatch(setSocket(socket));
-    return socket;
+      store.dispatch(setSocket(socket));
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'INITIALIZATION_ERROR',
+        message: "Failed to initialize socket connection"
+      }));
+    }
   }
 
   emitUserOnline() {
-    const { socket } = store.getState().socket;
-    if (socket) {
-      const userId = store.getState().user.user._id;
-      socket.emit("user_online", userId);
+    try {
+      const { socket } = store.getState().socket;
+      const { user } = store.getState().user;
+
+      if (!socket) {
+        throw new Error("Socket not initialized");
+      }
+      if (!user?._id) {
+        throw new Error("User not authenticated");
+      }
+
+      socket.emit("user_online", user._id);
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'EMIT_ERROR',
+        event: 'user_online',
+        message: error.message
+      }));
     }
   }
 
   emitCaptainOnline() {
-    const { socket } = store.getState().socket;
-    if (socket) {
-      const captainId = store.getState().user.user._id;
-      socket.emit("captain_online", captainId);
+    try {
+      const { socket } = store.getState().socket;
+      const { user } = store.getState().user;
+
+      if (!socket) {
+        throw new Error("Socket not initialized");
+      }
+      if (!user?._id) {
+        throw new Error("User not authenticated");
+      }
+
+      socket.emit("captain_online", user._id);
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'EMIT_ERROR',
+        event: 'captain_online',
+        message: error.message
+      }));
     }
   }
 
   emitJoinRide(rideId) {
-    const { socket } = store.getState().socket;
-    if (socket) {
+    try {
+      const { socket } = store.getState().socket;
+      
+      if (!socket) {
+        throw new Error("Socket not initialized");
+      }
+      if (!rideId) {
+        throw new Error("Ride ID is required");
+      }
+
       socket.emit("join_ride", rideId);
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'EMIT_ERROR',
+        event: 'join_ride',
+        message: error.message
+      }));
     }
   }
 
   emitCaptainLocation(location) {
-    const { socket } = store.getState().socket;
-    if (socket) {
+    try {
+      const { socket } = store.getState().socket;
+      
+      if (!socket) {
+        throw new Error("Socket not initialized");
+      }
+      if (!location?.latitude || !location?.longitude) {
+        throw new Error("Invalid location data");
+      }
+
       socket.emit("captain_location", location);
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'EMIT_ERROR',
+        event: 'captain_location',
+        message: error.message
+      }));
     }
   }
 
   disconnect() {
-    const { socket } = store.getState().socket;
-    if (socket) {
-      socket.disconnect();
-      store.dispatch(setSocket(null));
-      store.dispatch(setConnected(false));
+    try {
+      const { socket } = store.getState().socket;
+      if (socket) {
+        socket.disconnect();
+        store.dispatch(setSocket(null));
+        store.dispatch(setConnected(false));
+      }
+    } catch (error) {
+      store.dispatch(setError({
+        type: 'DISCONNECT_ERROR',
+        message: "Failed to disconnect socket"
+      }));
     }
   }
 }

@@ -1,6 +1,10 @@
 import { Server } from "socket.io";
 import client from "./services/redis.service.js";
 import ApiError from "./utils/ApiError.js";
+import {
+  getCaptainsInTheRadius,
+  updateCaptainLocation,
+} from "./services/maps.service.js";
 
 const SOCKET_KEYS = {
   USER: "socket:user",
@@ -53,11 +57,68 @@ function initializeSocket(server) {
       }
     });
 
+    socket.on("captain_location", async (location) => {
+      try {
+        if (!socket.captainId) {
+          throw new ApiError(400, "Captain not registered");
+        }
+
+        if (!location?.latitude || !location?.longitude) {
+          throw new ApiError(400, "Invalid location data");
+        }
+
+        const locationKey = `location:${socket.captainId}`;
+        await client.hset(locationKey, [
+          "latitude",
+          location.latitude.toString(),
+          "longitude",
+          location.longitude.toString(),
+          "accuracy",
+          (location.accuracy || 0).toString(),
+          "timestamp",
+          location.timestamp || new Date().toISOString(),
+          "socketId",
+          socket.id,
+        ]);
+
+        await client.expire(locationKey, 1800);
+
+        await updateCaptainLocation(
+          socket.captainId,
+          location.latitude,
+          location.longitude
+        );
+
+        if (socket.rideId) {
+          const rideStr = await client.get(`ride:${socket.rideId}`);
+          if (rideStr) {
+            const ride = JSON.parse(rideStr);
+            await notifyUser(ride.user, "user", "captain_location", {
+              rideId: socket.rideId,
+              location: {
+                latitude: location.latitude,
+                longitude: location.longitude,
+              },
+            });
+          }
+        }
+      } catch (error) {
+        socket.emit("socket_error", {
+          statusCode: error.statusCode || 500,
+          event: "captain_location",
+          message: error.message || "Failed to update location",
+        });
+      }
+    });
+
     socket.on("disconnect", async () => {
       try {
         if (socket.captainId) {
+          await Promise.all([
+            client.hdel(SOCKET_KEYS.CAPTAIN, socket.captainId),
+            client.del(`captain:location:${socket.captainId}`),
+          ]);
           console.log("Captain offline: ", socket.captainId);
-          await client.hdel(SOCKET_KEYS.CAPTAIN, socket.captainId);
         }
         if (socket.userId) {
           console.log("User offline: ", socket.userId);
@@ -95,4 +156,52 @@ async function notifyUser(userId, type, event, data) {
   }
 }
 
-export { initializeSocket, notifyUser };
+async function notifyNearbyCaptains(ride, pickupCoords) {
+  if (!io) {
+    throw new ApiError(500, "Socket not initialized");
+  }
+
+  const nearbyCaptains = await getCaptainsInTheRadius(
+    pickupCoords.ltd,
+    pickupCoords.lng,
+    3
+  );
+
+  if (!nearbyCaptains.length) {
+    throw new ApiError(404, "No captains found nearby");
+  }
+
+  const notificationPromises = nearbyCaptains.map(async (captain) => {
+    const socketId = await client.hget(SOCKET_KEYS.CAPTAIN, captain._id);
+    if (!socketId) {
+      return false;
+    }
+
+    io.to(socketId).emit("new_ride_request", {
+      rideId: ride._id,
+      pickup: ride.pickup,
+      destination: ride.destination,
+      fare: ride.fare,
+      distance: ride.distance,
+      estimatedTime: ride.duration,
+      rider: {
+        name: ride.user.fullname,
+        photo: ride.user.photo,
+      },
+    });
+    return true;
+  });
+
+  const results = await Promise.all(notificationPromises);
+  const notifiedCount = results.filter(Boolean).length;
+
+  if (notifiedCount === 0) {
+    throw new ApiError(500, "Failed to notify any nearby captains");
+  }
+
+  console.log(
+    `Notified ${notifiedCount} of ${nearbyCaptains.length} nearby captains`
+  );
+}
+
+export { initializeSocket, notifyUser, notifyNearbyCaptains };

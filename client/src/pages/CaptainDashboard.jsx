@@ -4,17 +4,57 @@ import { LiveTracking } from "../components";
 import { InactiveCaptain, RideRequest, ActiveRide } from "../components";
 import { updateStatus } from "../store/slices/userSlice";
 import { toast } from "react-toastify";
-import gsap from "gsap";
+import { socketService } from "../services/socket.service";
 
 function CaptainDashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
   const [currentRide, setCurrentRide] = useState(null);
   const [showRequest, setShowRequest] = useState(false);
+  const [captainLocation, setCaptainLocation] = useState(null);
 
   const isActive = user?.status === "active";
 
-  // Simulated ride request - replace with real data
+  useEffect(() => {
+    if (user?.status === "active") {
+      socketService.initialize();
+      socketService.emitCaptainOnline();
+
+      // Start location tracking
+      const locationInterval = setInterval(() => {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const location = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString(),
+              };
+
+              setCaptainLocation(location);
+              socketService.emitCaptainLocation(location);
+            },
+            (error) => {
+              console.error("Error getting location:", error);
+              toast.error("Unable to get location");
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0,
+            }
+          );
+        }
+      }, 10000);
+
+      return () => {
+        clearInterval(locationInterval);
+        socketService.disconnect();
+      };
+    }
+  }, [user?.status]);
+
   const rideData = {
     id: "ride123",
     pickup: "Central Station",
@@ -32,7 +72,6 @@ function CaptainDashboard() {
     fare: "24.50",
   };
 
-  // Simulate incoming ride request
   useEffect(() => {
     if (isActive && !currentRide) {
       const timer = setTimeout(() => {
@@ -44,7 +83,6 @@ function CaptainDashboard() {
 
   const handleAcceptRide = async (ride) => {
     try {
-      // Add your ride acceptance logic here
       setCurrentRide(ride);
       setShowRequest(false);
       toast.success("Ride accepted successfully!");
@@ -101,6 +139,7 @@ function CaptainDashboard() {
             origin={currentRide?.pickup}
             destination={currentRide?.destination}
             isRideActive={!!currentRide}
+            captainLocation={captainLocation} // Add this prop
           />
         </div>
 

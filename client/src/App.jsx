@@ -4,25 +4,12 @@ import { getUserProfile } from "./store/slices/userSlice";
 import apiClient from "./services/api.service";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Loader, Error } from "./components";
-import { socketService } from "./services/socket.service";
 
 function App() {
   const [healthCheckError, setHealthCheckError] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
   const { loading, isAuthenticated } = useSelector((state) => state.auth);
-  const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (user?._id && user?.role === "captain" && user?.status === "active") {
-      socketService.initialize();
-      socketService.emitCaptainOnline(user._id);
-    }
-
-    return () => {
-      socketService.disconnect();
-    };
-  }, [user?.status, user?.role, user?._id]);
 
   useEffect(() => {
     const healthCheck = async () => {

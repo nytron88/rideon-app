@@ -19,7 +19,9 @@ const socketSlice = createSlice({
     },
     setError: (state, action) => {
       state.error = action.payload;
-      toast.error(action.payload);
+      if (action.payload) {
+        toast.error(action.payload?.message);
+      }
     },
     clearError: (state) => {
       state.error = null;
@@ -27,5 +29,6 @@ const socketSlice = createSlice({
   },
 });
 
-export const { setSocket, setConnected, setError, clearError } = socketSlice.actions;
+export const { setSocket, setConnected, setError, clearError } =
+  socketSlice.actions;
 export default socketSlice.reducer;
