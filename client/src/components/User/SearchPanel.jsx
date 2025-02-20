@@ -69,7 +69,7 @@ function SearchPanel() {
       console.error("Error in handleSelect:", err);
       setError(
         err?.response?.data?.message ||
-          err?.message ||
+          err?.message?.errors?.[0].msg ||
           "Failed to get location details"
       );
     }

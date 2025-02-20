@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { socketService } from "../../services/socket.service";
 
 function WaitingForCaptain() {
+
+  useEffect(() => {
+    socketService.initialize();
+    socketService.emitUserOnline();
+  }, []);
+
   return (
     <div className="bg-black/80 backdrop-blur-lg rounded-2xl p-6 w-full border border-white/10 shadow-2xl">
       <h3 className="text-lg font-semibold text-white mb-6 text-center">

@@ -3,31 +3,34 @@ import {
   MapPin,
   Clock,
   Navigation,
-  User,
   DollarSign,
   Star,
   Award,
 } from "lucide-react";
 import gsap from "gsap";
 
-const MOCK_RIDE_REQUEST = {
-  id: "ride123",
-  pickup: "Central Station",
-  destination: "Airport Terminal 1",
+const defaultRide = {
+  id: "",
+  pickup: "",
+  destination: "",
   rider: {
-    name: "John Doe",
-    photo: "https://i.pravatar.cc/150?img=68",
-    rating: 4.8,
-    totalRides: 24,
-    memberSince: "Jan 2024",
-    preferredPayment: "VISA •••• 4242",
+    name: "",
+    photo: "https://via.placeholder.com/150",
+    rating: 0,
+    totalRides: 0,
+    memberSince: "",
+    preferredPayment: "",
   },
-  estimatedTime: "25-30",
-  distance: "12.5",
-  fare: "24.50",
+  estimatedTime: "",
+  distance: "",
+  fare: "",
 };
 
-function RideRequest({ ride, onAccept, onDecline }) {
+function RideRequest({
+  ride = defaultRide,
+  onAccept = () => {},
+  onDecline = () => {},
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef(null);
   const contentRef = useRef(null);
@@ -282,24 +285,5 @@ function RideRequest({ ride, onAccept, onDecline }) {
     </div>
   );
 }
-
-RideRequest.defaultProps = {
-  ride: {
-    id: "",
-    pickup: "",
-    destination: "",
-    rider: {
-      name: "",
-      photo: "https://via.placeholder.com/150",
-      rating: 0,
-      totalRides: 0,
-      memberSince: "",
-      preferredPayment: "",
-    },
-    estimatedTime: "",
-    distance: "",
-    fare: "",
-  },
-};
 
 export default RideRequest;

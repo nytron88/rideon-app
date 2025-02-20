@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { toast } from "react-toastify";
 
 const initialState = {
   isConnected: false,
@@ -18,6 +19,7 @@ const socketSlice = createSlice({
     },
     setError: (state, action) => {
       state.error = action.payload;
+      toast.error(action.payload);
     },
     clearError: (state) => {
       state.error = null;
