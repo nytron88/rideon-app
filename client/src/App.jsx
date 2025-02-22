@@ -4,6 +4,8 @@ import { getUserProfile } from "./store/slices/userSlice";
 import apiClient from "./services/api.service";
 import { useDispatch, useSelector } from "react-redux";
 import { Header, Loader, Error } from "./components";
+import { fetchCurrentRide } from "./store/slices/rideSlice";
+import { socketService } from "./services/socket.service";
 
 function App() {
   const [healthCheckError, setHealthCheckError] = useState("");
@@ -35,10 +37,20 @@ function App() {
       if (isAuthenticated) return;
 
       await dispatch(getUserProfile());
+      await dispatch(fetchCurrentRide());
     };
 
     setExistingUser();
   }, [dispatch, isAuthenticated]);
+
+  useEffect(() => {
+    dispatch(fetchCurrentRide()).then(({ payload }) => {
+      if (payload?._id) {
+        socketService.initialize();
+        socketService.emitJoinRide(payload._id);
+      }
+    });
+  }, [dispatch]);
 
   if (loading || initialLoading) {
     return <Loader />;

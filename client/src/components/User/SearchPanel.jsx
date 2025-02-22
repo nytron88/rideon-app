@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   ArrowRight,
   MapPin,
@@ -19,18 +19,80 @@ import {
 } from "../../store/slices/mapSlice";
 import { getFare, createRide } from "../../store/slices/rideSlice";
 import WaitingForCaptain from "./WaitingForCaptain";
+import { debounce } from "lodash";
+import RideAccepted from "./RideAccepted";
 
 function SearchPanel() {
+  const [pickupLocation, setPickupLocation] = useState({
+    query: "",
+    coordinates: null,
+  });
+  const [destinationLocation, setDestinationLocation] = useState({
+    query: "",
+    coordinates: null,
+  });
   const [activeField, setActiveField] = useState(null);
   const [riderCount, setRiderCount] = useState(1);
   const [error, setError] = useState(null);
   const [isCreatingRide, setIsCreatingRide] = useState(false);
-  const [showWaiting, setShowWaiting] = useState(false); // Add new state
+  const [showWaiting, setShowWaiting] = useState(false);
+
   const dispatch = useDispatch();
   const pickup = useLocationSearch();
   const destination = useLocationSearch();
   const { distance, duration } = useSelector((state) => state.map);
-  const { fare, loading: fareLoading } = useSelector((state) => state.ride);
+  const {
+    fare,
+    loading: fareLoading,
+    currentRide,
+  } = useSelector((state) => state.ride);
+
+  const handleInputChange = (value, type) => {
+    setError(null);
+    if (type === "pickup") {
+      setPickupLocation((prev) => ({ ...prev, query: value }));
+      pickup.search(value);
+    } else {
+      setDestinationLocation((prev) => ({ ...prev, query: value }));
+      destination.search(value);
+    }
+  };
+
+  // Debounced function to calculate route
+  const calculateRoute = useCallback(
+    debounce(async (pickup, destination) => {
+      try {
+        if (!pickup.coordinates || !destination.coordinates) return;
+
+        const distanceResult = await dispatch(
+          getDistanceTime({
+            origin: pickup.query,
+            destination: destination.query,
+          })
+        ).unwrap();
+
+        if (distanceResult?.distance) {
+          await dispatch(
+            getFare({
+              pickup: pickup.query,
+              destination: destination.query,
+            })
+          ).unwrap();
+        }
+      } catch (err) {
+        console.error("Error calculating route:", err);
+        setError("Unable to calculate route. Please try again.");
+      }
+    }, 500),
+    [dispatch]
+  );
+
+  // Effect to recalculate route when locations change
+  useEffect(() => {
+    if (pickupLocation.coordinates && destinationLocation.coordinates) {
+      calculateRoute(pickupLocation, destinationLocation);
+    }
+  }, [pickupLocation.coordinates, destinationLocation.coordinates]);
 
   const handleSelect = async (result, type) => {
     try {
@@ -40,50 +102,23 @@ function SearchPanel() {
       ).unwrap();
 
       if (type === "pickup") {
-        pickup.setQuery(result.description);
+        setPickupLocation({ query: result.description, coordinates });
         dispatch(setPickupCoordinates(coordinates));
       } else {
-        destination.setQuery(result.description);
+        setDestinationLocation({ query: result.description, coordinates });
         dispatch(setDestinationCoordinates(coordinates));
       }
 
       setActiveField(null);
-
-      if (pickup.query && destination.query) {
-        await dispatch(
-          getDistanceTime({
-            origin: pickup.query,
-            destination: destination.query,
-          })
-        ).unwrap();
-
-        // Get fare after distance and time
-        await dispatch(
-          getFare({
-            pickup: pickup.query,
-            destination: destination.query,
-          })
-        ).unwrap();
-      }
     } catch (err) {
       console.error("Error in handleSelect:", err);
-      setError(
-        err?.response?.data?.message ||
-          err?.message?.errors?.[0].msg ||
-          "Failed to get location details"
-      );
+      setError("Failed to get location details");
     }
   };
 
   const handleFocus = (field) => {
-    if (activeField !== field) {
-      dispatch(clearSuggestions());
-      setActiveField(field);
-    }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => setActiveField(null), 200);
+    setActiveField(field);
+    dispatch(clearSuggestions());
   };
 
   const handleCreateRide = async () => {
@@ -92,8 +127,8 @@ function SearchPanel() {
       setError(null);
 
       const rideData = {
-        pickup: pickup.query,
-        destination: destination.query,
+        pickup: pickupLocation.query,
+        destination: destinationLocation.query,
         passengers: riderCount,
       };
 
@@ -108,7 +143,9 @@ function SearchPanel() {
 
   return (
     <div className="relative">
-      {showWaiting ? (
+      {currentRide ? (
+        <RideAccepted ride={currentRide} />
+      ) : showWaiting ? (
         <WaitingForCaptain />
       ) : (
         <div
@@ -124,30 +161,32 @@ function SearchPanel() {
           <div className="space-y-4">
             <SearchInput
               placeholder="Pickup location"
-              value={pickup.query}
-              onChange={pickup.search}
+              value={pickupLocation.query}
+              onChange={(value) => handleInputChange(value, "pickup")}
+              onSearch={(value) => pickup.search(value)} // Add this
               onFocus={() => handleFocus("pickup")}
-              onBlur={handleBlur}
+              onBlur={() => setActiveField(null)}
               iconColor="blue"
-              Icon={MapPin}
               results={pickup.results}
               isLoading={pickup.isLoading}
               onSelect={(result) => handleSelect(result, "pickup")}
               showResults={activeField === "pickup"}
+              error={error}
             />
 
             <SearchInput
               placeholder="Where to?"
-              value={destination.query}
-              onChange={destination.search}
+              value={destinationLocation.query}
+              onChange={(value) => handleInputChange(value, "destination")}
+              onSearch={(value) => destination.search(value)} // Add this
               onFocus={() => handleFocus("destination")}
-              onBlur={handleBlur}
+              onBlur={() => setActiveField(null)}
               iconColor="purple"
-              Icon={MapPin}
               results={destination.results}
               isLoading={destination.isLoading}
               onSelect={(result) => handleSelect(result, "destination")}
               showResults={activeField === "destination"}
+              error={error}
             />
 
             {/* Number of Riders */}
@@ -184,7 +223,7 @@ function SearchPanel() {
             </div>
 
             {/* Trip Information */}
-            {pickup.query && destination.query && (
+            {pickupLocation.query && destinationLocation.query && (
               <div className="grid grid-cols-2 gap-4 mt-6">
                 <div className="bg-white/5 rounded-xl border border-white/10 p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -231,7 +270,11 @@ function SearchPanel() {
           <div className="mt-6">
             <button
               onClick={handleCreateRide}
-              disabled={!pickup.query || !destination.query || isCreatingRide}
+              disabled={
+                !pickupLocation.query ||
+                !destinationLocation.query ||
+                isCreatingRide
+              }
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 
                      text-white py-3.5 rounded-xl font-medium 
                      hover:from-blue-500 hover:to-purple-500 transition-all 

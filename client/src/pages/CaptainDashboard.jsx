@@ -5,12 +5,12 @@ import { InactiveCaptain, RideRequest, ActiveRide } from "../components";
 import { updateStatus } from "../store/slices/userSlice";
 import { toast } from "react-toastify";
 import { socketService } from "../services/socket.service";
+import { clearNewRideRequest } from "../store/slices/rideSlice";
 
 function CaptainDashboard() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.user);
-  const [currentRide, setCurrentRide] = useState(null);
-  const [showRequest, setShowRequest] = useState(false);
+  const { newRideRequest, currentRide } = useSelector((state) => state.ride);
   const [captainLocation, setCaptainLocation] = useState(null);
 
   const isActive = user?.status === "active";
@@ -20,7 +20,6 @@ function CaptainDashboard() {
       socketService.initialize();
       socketService.emitCaptainOnline();
 
-      // Start location tracking
       const locationInterval = setInterval(() => {
         if ("geolocation" in navigator) {
           navigator.geolocation.getCurrentPosition(
@@ -36,8 +35,9 @@ function CaptainDashboard() {
               socketService.emitCaptainLocation(location);
             },
             (error) => {
-              console.error("Error getting location:", error);
-              toast.error("Unable to get location");
+              toast.error(
+                "Unable to get location. Please enable location services"
+              );
             },
             {
               enableHighAccuracy: true,
@@ -55,36 +55,9 @@ function CaptainDashboard() {
     }
   }, [user?.status]);
 
-  const rideData = {
-    id: "ride123",
-    pickup: "Central Station",
-    destination: "Airport Terminal 1",
-    rider: {
-      name: "John Doe",
-      photo: "https://i.pravatar.cc/150?img=68",
-      rating: 4.8,
-      totalRides: 24,
-      memberSince: "Jan 2024",
-      preferredPayment: "VISA •••• 4242",
-    },
-    estimatedTime: "25-30",
-    distance: "12.5",
-    fare: "24.50",
-  };
-
-  useEffect(() => {
-    if (isActive && !currentRide) {
-      const timer = setTimeout(() => {
-        setShowRequest(true);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [isActive, currentRide]);
-
   const handleAcceptRide = async (ride) => {
     try {
-      setCurrentRide(ride);
-      setShowRequest(false);
+      dispatch(clearNewRideRequest());
       toast.success("Ride accepted successfully!");
     } catch (error) {
       toast.error("Failed to accept ride");
@@ -92,7 +65,7 @@ function CaptainDashboard() {
   };
 
   const handleDeclineRide = () => {
-    setShowRequest(false);
+    dispatch(clearNewRideRequest());
     toast.info("Ride declined");
   };
 
@@ -144,13 +117,13 @@ function CaptainDashboard() {
         </div>
 
         {/* Ride Request Popup */}
-        {showRequest && !currentRide && (
+        {newRideRequest && !currentRide && (
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm 
                        flex items-center justify-center p-4 z-20"
           >
             <RideRequest
-              ride={rideData}
+              ride={newRideRequest}
               onAccept={handleAcceptRide}
               onDecline={handleDeclineRide}
             />

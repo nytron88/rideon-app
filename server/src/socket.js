@@ -5,6 +5,7 @@ import {
   getCaptainsInTheRadius,
   updateCaptainLocation,
 } from "./services/maps.service.js";
+import { User } from "./models/user.model.js";
 
 const SOCKET_KEYS = {
   USER: "socket:user",
@@ -111,6 +112,39 @@ function initializeSocket(server) {
       }
     });
 
+    socket.on("ride_accepted", async (rideId) => {
+      try {
+        if (!socket.captainId) {
+          throw new ApiError(400, "Captain not registered");
+        }
+
+        const rideKey = `ride:${rideId}`;
+        const rideStr = await client.get(rideKey);
+        if (!rideStr) {
+          throw new ApiError(404, "Ride not found");
+        }
+
+        const ride = JSON.parse(rideStr);
+        socket.rideId = rideId;
+
+        await notifyUser(ride.user, "user", "ride_accepted", {
+          rideId,
+          captainId: socket.captainId,
+        });
+      } catch (error) {
+        socket.emit("socket_error", {
+          statusCode: error.statusCode || 500,
+          event: "ride_accepted",
+          message:
+            error.message || "Failed to notify user about ride acceptance",
+        });
+      }
+    });
+
+    socket.on("join_ride", async (rideId) => {
+      joinRide(rideId, socket.userId, socket.captainId);
+    });
+
     socket.on("disconnect", async () => {
       try {
         if (socket.captainId) {
@@ -156,6 +190,36 @@ async function notifyUser(userId, type, event, data) {
   }
 }
 
+async function joinRide(rideId, userId, captainId) {
+  if (!io) {
+    throw new ApiError(500, "Socket not initialized");
+  }
+
+  const rideKey = `ride:${rideId}`;
+  const rideStr = await client.get(rideKey);
+  if (!rideStr) {
+    throw new ApiError(404, "Ride not found");
+  }
+
+  const ride = JSON.parse(rideStr);
+
+  if (userId) {
+    const userSocketId = await client.hget(SOCKET_KEYS.USER, userId);
+    if (userSocketId) {
+      io.to(userSocketId).emit("ride_joined", { rideId, captainId });
+    }
+  }
+
+  if (captainId) {
+    const captainSocketId = await client.hget(SOCKET_KEYS.CAPTAIN, captainId);
+    if (captainSocketId) {
+      io.to(captainSocketId).emit("ride_joined", { rideId, userId });
+    }
+  }
+
+  return ride;
+}
+
 async function notifyNearbyCaptains(ride, pickupCoords) {
   if (!io) {
     throw new ApiError(500, "Socket not initialized");
@@ -171,6 +235,12 @@ async function notifyNearbyCaptains(ride, pickupCoords) {
     throw new ApiError(404, "No captains found nearby");
   }
 
+  const user = await User.findById(ride?.user);
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
   const notificationPromises = nearbyCaptains.map(async (captain) => {
     const socketId = await client.hget(SOCKET_KEYS.CAPTAIN, captain._id);
     if (!socketId) {
@@ -184,9 +254,10 @@ async function notifyNearbyCaptains(ride, pickupCoords) {
       fare: ride.fare,
       distance: ride.distance,
       estimatedTime: ride.duration,
+      passengers: ride.passengers,
       rider: {
-        name: ride.user.fullname,
-        photo: ride.user.photo,
+        name: user.fullname,
+        photo: user.photo,
       },
     });
     return true;
@@ -204,4 +275,4 @@ async function notifyNearbyCaptains(ride, pickupCoords) {
   );
 }
 
-export { initializeSocket, notifyUser, notifyNearbyCaptains };
+export { initializeSocket, notifyUser, joinRide, notifyNearbyCaptains };

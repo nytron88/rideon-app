@@ -1,13 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  MapPin,
-  Navigation,
-  Star,
-  Phone,
-  Clock,
-  DollarSign,
-  ChevronUp,
-} from "lucide-react";
+import { MapPin, Navigation, Clock, DollarSign, ChevronUp } from "lucide-react";
 import gsap from "gsap";
 
 function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
@@ -25,8 +17,8 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -74,7 +66,7 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
         <div
           onClick={() => isMobile && toggleExpand()}
           className={`p-4 border-b border-white/10 
-                   ${isMobile ? 'cursor-pointer hover:bg-white/5' : ''} 
+                   ${isMobile ? "cursor-pointer hover:bg-white/5" : ""} 
                    transition-colors`}
         >
           <div className="flex items-center justify-between">

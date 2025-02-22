@@ -1,29 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  MapPin,
-  Clock,
-  Navigation,
-  DollarSign,
-  Star,
-  Award,
-} from "lucide-react";
+import { MapPin, Clock, Navigation, DollarSign, Users } from "lucide-react";
 import gsap from "gsap";
 
 const defaultRide = {
-  id: "",
+  rideId: "",
   pickup: "",
   destination: "",
-  rider: {
-    name: "",
-    photo: "https://via.placeholder.com/150",
-    rating: 0,
-    totalRides: 0,
-    memberSince: "",
-    preferredPayment: "",
-  },
-  estimatedTime: "",
-  distance: "",
-  fare: "",
+  fare: 0,
+  distance: 0,
+  estimatedTime: 0,
+  passengers: 1,
+  rider: {},
 };
 
 function RideRequest({
@@ -144,7 +131,7 @@ function RideRequest({
       className="w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto overscroll-contain"
     >
       <div className="bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl">
-        {/* Header - Make it sticky */}
+        {/* Header */}
         <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-xl p-4 sm:p-6 border-b border-white/10">
           <h3 className="text-lg sm:text-xl font-semibold text-white mb-1">
             New Ride Request
@@ -155,39 +142,22 @@ function RideRequest({
           </div>
         </div>
 
-        {/* Content - Adjust padding and spacing */}
         <div ref={contentRef} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Rider Info - Improve mobile layout */}
-          <div className="flex items-center gap-3 sm:gap-4 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10 hover:bg-white/10 transition-colors">
-            <img
-              src={ride.rider.photo}
-              alt={ride.rider.name}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-white/10"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <h4 className="text-white font-medium truncate">
-                  {ride.rider.name}
-                </h4>
-                <div className="flex items-center gap-1 px-2 py-0.5 bg-white/10 rounded-full shrink-0">
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  <span className="text-sm text-white">
-                    {ride.rider.rating}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 flex-wrap">
-                <Award className="w-4 h-4 shrink-0" />
-                <span className="truncate">{ride.rider.totalRides} rides</span>
-                <span className="hidden sm:inline">•</span>
-                <span className="truncate">
-                  Member since {ride.rider.memberSince}
-                </span>
+          {/* Rider Info - Show only if photo exists */}
+          {ride.rider?.photo && (
+            <div className="flex items-center gap-3 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
+              <img
+                src={ride.rider.photo}
+                alt="Rider"
+                className="w-12 h-12 rounded-full object-cover"
+              />
+              <div>
+                <h4 className="text-white font-medium">{ride.rider.name}</h4>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Trip Details - Make it more compact on mobile */}
+          {/* Trip Details */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
             <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-1">
@@ -201,7 +171,7 @@ function RideRequest({
                 <Navigation className="w-4 h-4 shrink-0" />
                 <span>Distance</span>
               </div>
-              <p className="text-white font-medium">{ride.distance} km</p>
+              <p className="text-white font-medium">{ride.distance} mi</p>
             </div>
             <div className="col-span-2 sm:col-span-1 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-1">
@@ -210,9 +180,18 @@ function RideRequest({
               </div>
               <p className="text-white font-medium">${ride.fare}</p>
             </div>
+
+            {/* New Passengers section */}
+            <div className="col-span-2 sm:col-span-3 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-1">
+                <Users className="w-4 h-4 shrink-0" />
+                <span>Passengers</span>
+              </div>
+              <p className="text-white font-medium">{ride.passengers}</p>
+            </div>
           </div>
 
-          {/* Route Details - Improve spacing */}
+          {/* Route Details */}
           <div className="space-y-3 sm:space-y-4 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
             <div className="flex items-start gap-3">
               <div className="p-2 bg-blue-500/20 rounded-lg">
@@ -234,17 +213,8 @@ function RideRequest({
               </div>
             </div>
           </div>
-
-          {/* Payment Method */}
-          <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
-            <p className="text-sm text-gray-400 mb-1">Payment Method</p>
-            <p className="text-white font-medium">
-              {ride.rider.preferredPayment}
-            </p>
-          </div>
         </div>
 
-        {/* Actions - Make it sticky */}
         <div
           ref={actionsRef}
           className="sticky bottom-0 bg-black/90 backdrop-blur-xl p-4 sm:p-6 pt-0 grid grid-cols-2 gap-2 sm:gap-4"

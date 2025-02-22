@@ -1,6 +1,7 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import { Ride } from "../models/ride.model.js";
 import {
   createRide as createRideService,
   getFare as getFareService,
@@ -10,8 +11,21 @@ import { getAddressCoordinate } from "../services/maps.service.js";
 import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
 import { notifyNearbyCaptains } from "../socket.js";
 
-export const createRide = asyncHandler(async (req, res) => {
-  const { pickup, destination, passengers } = req.body;
+const createRide = asyncHandler(async (req, res) => {
+  const { pickup, destination, passengers, fare, distance, duration } =
+    req.body;
+
+  if (!pickup || !destination || !fare || !distance || !duration) {
+    throw new ApiError(400, "All ride details are required");
+  }
+
+  if (!fare || !distance || !duration) {
+    const fareResponse = await getFareService(pickup, destination);
+
+    fare = fareResponse.fare;
+    distance = fareResponse.distance;
+    duration = fareResponse.duration;
+  }
 
   const pickupCoords = await getAddressCoordinate(pickup);
 
@@ -20,6 +34,9 @@ export const createRide = asyncHandler(async (req, res) => {
     pickup,
     destination,
     passengers,
+    fare,
+    duration,
+    distance,
   });
 
   await notifyNearbyCaptains(ride, pickupCoords);
@@ -80,4 +97,22 @@ const createPaymentIntent = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, ride, "Payment intent created successfully"));
 });
 
-export { getFare, createPaymentIntent };
+const fetchCurrentRide = asyncHandler(async (req, res) => {
+  const isCaptain = req.user.role === "captain";
+  const filter = isCaptain ? { captain: req.user._id } : { user: req.user._id };
+
+  const ride = await Ride.findOne({
+    ...filter,
+    status: { $in: ["accepted", "ongoing"] },
+  }).populate(isCaptain ? "user" : "captain", "name photo");
+
+  if (!ride) {
+    throw new ApiError(404, "No ride found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, ride, "Ride fetched successfully"));
+});
+
+export { createRide, getFare, createPaymentIntent, fetchCurrentRide };

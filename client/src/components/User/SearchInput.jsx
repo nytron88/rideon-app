@@ -1,11 +1,13 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { MapPin } from "lucide-react";
 import PropTypes from "prop-types";
+import debounce from "lodash/debounce";
 
 function SearchInput({
   placeholder,
   value = "",
   onChange,
+  onSearch, // Add this prop
   onFocus,
   onBlur,
   iconColor = "blue",
@@ -13,10 +15,21 @@ function SearchInput({
   isLoading = false,
   onSelect,
   showResults = false,
+  error,
 }) {
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
+  // Only one handleInputChange function
+  const handleInputChange = (e) => {
+    const newValue = e.target.value;
+    // Immediately update the input value
+    onChange(newValue);
+    // Debounce the search
+    debouncedSearch(newValue);
+  };
+
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -31,6 +44,21 @@ function SearchInput({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [onBlur]);
+
+  // Debounce only the search callback
+  const debouncedSearch = useCallback(
+    debounce((searchValue) => {
+      onSearch?.(searchValue);
+    }, 300),
+    [onSearch]
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Escape" && showResults) {
@@ -51,11 +79,17 @@ function SearchInput({
         ref={inputRef}
         type="text"
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={handleInputChange}
         onFocus={onFocus}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            inputRef.current.blur();
+            onBlur?.();
+          }
+        }}
         placeholder={placeholder}
-        className={`w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 
+        className={`w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/5 border 
+                   ${error ? "border-red-500" : "border-white/10"} 
                    text-white placeholder-gray-400 focus:border-${iconColor}-500 
                    focus:ring-2 focus:ring-${iconColor}-500/20 outline-none transition-all 
                    duration-300 hover:border-white/20 cursor-text`}
@@ -63,11 +97,18 @@ function SearchInput({
         autoComplete="off"
       />
 
+      {error && typeof error === "string" && (
+        <div className="absolute -bottom-6 left-0 text-red-500 text-sm">
+          {error}
+        </div>
+      )}
+
       {showResults && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-2 bg-black/95 backdrop-blur-xl border border-white/10 
-                   rounded-xl shadow-2xl overflow-hidden max-h-[200px] overflow-y-auto"
+                   rounded-xl shadow-2xl max-h-[300px] overflow-y-auto scrollbar-thin 
+                   scrollbar-thumb-gray-700 scrollbar-track-transparent"
         >
           {isLoading ? (
             <div className="px-4 py-3 text-gray-400 text-sm flex items-center gap-2">
@@ -103,10 +144,12 @@ function SearchInput({
   );
 }
 
+// Update PropTypes
 SearchInput.propTypes = {
   placeholder: PropTypes.string.isRequired,
   value: PropTypes.string,
-  onChange: PropTypes.func,
+  onChange: PropTypes.func.isRequired,
+  onSearch: PropTypes.func, // Add new prop type
   onFocus: PropTypes.func,
   onBlur: PropTypes.func,
   iconColor: PropTypes.oneOf(["blue", "purple"]),
@@ -119,6 +162,7 @@ SearchInput.propTypes = {
   isLoading: PropTypes.bool,
   onSelect: PropTypes.func,
   showResults: PropTypes.bool,
+  error: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]), // Allow both boolean and string
 };
 
 export default SearchInput;

@@ -1,17 +1,30 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import apiClient from "../../services/api.service";
+import { toast } from "react-toastify";
 
 const initialState = {
   currentRide: null,
   fare: null,
   loading: false,
   error: null,
+  newRideRequest: null,
 };
 
 export const createRide = createAsyncThunk(
   "ride/createRide",
-  async (rideData, { rejectWithValue }) => {
+  async (rideData, { getState, rejectWithValue }) => {
     try {
+      const { ride } = getState();
+
+      if (ride?.fare) {
+        rideData = {
+          ...rideData,
+          fare: ride.fare.fare,
+          distance: ride.fare.distance,
+          duration: ride.fare.duration,
+        };
+      }
+
       const response = await apiClient.post("ride", rideData);
       return response.data.data;
     } catch (error) {
@@ -77,6 +90,21 @@ export const getFare = createAsyncThunk(
   }
 );
 
+export const fetchCurrentRide = createAsyncThunk(
+  "ride/fetchCurrentRide",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get("ride");
+      return response.data.data;
+    } catch (error) {
+      if (error.response && error.response.data) {
+        return rejectWithValue(error.response.data);
+      }
+      return rejectWithValue("Failed to fetch current ride");
+    }
+  }
+);
+
 const rideSlice = createSlice({
   name: "ride",
   initialState,
@@ -87,10 +115,15 @@ const rideSlice = createSlice({
     setCurrentRide: (state, action) => {
       state.currentRide = action.payload;
     },
+    setNewRideRequest: (state, action) => {
+      state.newRideRequest = action.payload;
+    },
+    clearNewRideRequest: (state) => {
+      state.newRideRequest = null;
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Create Ride
       .addCase(createRide.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -98,12 +131,14 @@ const rideSlice = createSlice({
       .addCase(createRide.fulfilled, (state, action) => {
         state.loading = false;
         state.currentRide = action.payload;
+        state.fare = null;
       })
       .addCase(createRide.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || "Failed to create ride";
+        const errorMessage = action.payload?.message || "Failed to create ride";
+        state.error = errorMessage;
+        toast.error(errorMessage);
       })
-      // Update Ride Status
       .addCase(updateRideStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -114,9 +149,11 @@ const rideSlice = createSlice({
       })
       .addCase(updateRideStatus.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        const errorMessage =
+          action.payload?.message || "Failed to update ride status";
+        state.error = errorMessage;
+        toast.error(errorMessage);
       })
-      // Create Payment Intent
       .addCase(createPaymentIntent.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -127,9 +164,10 @@ const rideSlice = createSlice({
       })
       .addCase(createPaymentIntent.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        const errorMessage = action.payload?.message || "Payment failed";
+        state.error = errorMessage;
+        toast.error(errorMessage);
       })
-      // Get Fare
       .addCase(getFare.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -141,11 +179,30 @@ const rideSlice = createSlice({
       })
       .addCase(getFare.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        const errorMessage =
+          action.payload?.message || "Unable to calculate fare";
+        state.error = errorMessage;
         state.fare = null;
+        toast.error(errorMessage);
+      })
+      .addCase(fetchCurrentRide.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCurrentRide.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentRide = action.payload;
+      })
+      .addCase(fetchCurrentRide.rejected, (state, action) => {
+        state.loading = false;
       });
   },
 });
 
-export const { clearCurrentRide, setCurrentRide } = rideSlice.actions;
+export const {
+  clearCurrentRide,
+  setCurrentRide,
+  setNewRideRequest,
+  clearNewRideRequest,
+} = rideSlice.actions;
 export default rideSlice.reducer;
