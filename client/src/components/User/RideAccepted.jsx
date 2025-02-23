@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigation } from "lucide-react";
+import { Navigation, MapPin, Users, DollarSign } from "lucide-react";
 
 function RideAccepted({ ride }) {
   const captain = ride?.captain || {};
@@ -14,11 +14,49 @@ function RideAccepted({ ride }) {
       <div className="flex items-center gap-4 mb-6">
         <img
           src={captain.photo}
-          alt={captain.name}
+          alt={captain.fullname}
           className="w-16 h-16 rounded-full object-cover border-2 border-white/10"
         />
         <div className="flex-1">
-          <h4 className="text-white font-medium">{captain.name}</h4>
+          <h4 className="text-white font-medium">{captain.fullname}</h4>
+        </div>
+      </div>
+
+      {/* Ride Details */}
+      <div className="bg-white/5 rounded-xl p-4 mb-6">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <MapPin className="w-5 h-5 text-blue-400" />
+            <div>
+              <p className="text-gray-400 text-sm">Pickup</p>
+              <p className="text-white">{ride.pickup}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <MapPin className="w-5 h-5 text-green-400" />
+            <div>
+              <p className="text-gray-400 text-sm">Destination</p>
+              <p className="text-white">{ride.destination}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <p className="text-gray-400 text-sm flex items-center gap-2">
+                <Users className="w-4 h-4" /> Passengers
+              </p>
+              <p className="text-white">{ride.passengers}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm flex items-center gap-2">
+                <DollarSign className="w-4 h-4" /> Fare
+              </p>
+              <p className="text-white">${ride.fare}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm">Distance</p>
+              <p className="text-white">{ride.distance} mi</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -28,7 +66,7 @@ function RideAccepted({ ride }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-gray-400 text-sm">Vehicle</p>
-              <p className="text-white">{captain.vehicle.model}</p>
+              <p className="text-white">{captain.vehicle.vehicleType}</p>
             </div>
             <div>
               <p className="text-gray-400 text-sm">Color</p>

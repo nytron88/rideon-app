@@ -9,6 +9,8 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
   const containerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  if (!ride) return null;
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -72,14 +74,14 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <img
-                src={ride.rider.photo}
-                alt={ride.rider.name}
+                src={ride.user.photo}
+                alt={ride.user.fullname}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
               />
               <div>
-                <h3 className="text-white font-medium">{ride.rider.name}</h3>
+                <h3 className="text-white font-medium">{ride.user.fullname}</h3>
                 <p className="text-sm text-gray-400">
-                  {ride.distance} km • ${ride.fare}
+                  {ride.distance} mi • ${ride.fare}
                 </p>
               </div>
             </div>
@@ -130,7 +132,7 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
                 <span>Time</span>
               </div>
               <p className="text-sm text-white font-medium">
-                {ride.estimatedTime} min
+                {ride.duration} min
               </p>
             </div>
             <div className="bg-white/5 rounded-xl p-3 border border-white/10">
@@ -139,7 +141,7 @@ function ActiveRide({ ride, onStartRide, onVerifyOTP }) {
                 <span>Distance</span>
               </div>
               <p className="text-sm text-white font-medium">
-                {ride.distance} km
+                {ride.distance} mi
               </p>
             </div>
             <div className="bg-white/5 rounded-xl p-3 border border-white/10">

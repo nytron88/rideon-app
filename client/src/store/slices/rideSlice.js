@@ -128,9 +128,8 @@ const rideSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createRide.fulfilled, (state, action) => {
+      .addCase(createRide.fulfilled, (state) => {
         state.loading = false;
-        state.currentRide = action.payload;
         state.fare = null;
       })
       .addCase(createRide.rejected, (state, action) => {

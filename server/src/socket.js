@@ -6,6 +6,7 @@ import {
   updateCaptainLocation,
 } from "./services/maps.service.js";
 import { User } from "./models/user.model.js";
+import { Ride } from "./models/ride.model.js";
 
 const SOCKET_KEYS = {
   USER: "socket:user",
@@ -46,7 +47,6 @@ function initializeSocket(server) {
         if (!captainId) {
           throw new ApiError(400, "Captain ID is required");
         }
-        console.log("Captain online: ", captainId);
         await client.hset(SOCKET_KEYS.CAPTAIN, captainId, socket.id);
         socket.captainId = captainId;
       } catch (error) {
@@ -61,7 +61,7 @@ function initializeSocket(server) {
     socket.on("captain_location", async (location) => {
       try {
         if (!socket.captainId) {
-          throw new ApiError(400, "Captain not registered");
+          return;
         }
 
         if (!location?.latitude || !location?.longitude) {
@@ -118,15 +118,13 @@ function initializeSocket(server) {
           throw new ApiError(400, "Captain not registered");
         }
 
-        const rideKey = `ride:${rideId}`;
-        const rideStr = await client.get(rideKey);
-        if (!rideStr) {
-          throw new ApiError(404, "Ride not found");
-        }
+        const ride = await Ride.findByIdAndUpdate(
+          { _id: rideId },
+          { status: "accepted", captain: socket.captainId },
+          { new: true }
+        );
 
-        const ride = JSON.parse(rideStr);
         socket.rideId = rideId;
-
         await notifyUser(ride.user, "user", "ride_accepted", {
           rideId,
           captainId: socket.captainId,
@@ -176,12 +174,20 @@ async function notifyUser(userId, type, event, data) {
     throw new ApiError(500, "Socket not initialized");
   }
 
+  console.log(`Notifying ${type}:`, userId, event, data);
+
   try {
     const hashKey = type === "captain" ? SOCKET_KEYS.CAPTAIN : SOCKET_KEYS.USER;
     const socketId = await client.hget(hashKey, userId);
 
     if (socketId) {
-      io.to(socketId).emit(event, data);
+      const ride = await Ride.findById(data.rideId).populate(
+        "captain",
+        "fullname photo vehicle"
+      );
+
+      await client.set(`ride:${data.rideId}`, JSON.stringify(ride));
+      io.to(socketId).emit(event, { ...data, ride });
     } else {
       console.error(`${type} socket not found:`, userId);
     }
@@ -253,12 +259,9 @@ async function notifyNearbyCaptains(ride, pickupCoords) {
       destination: ride.destination,
       fare: ride.fare,
       distance: ride.distance,
-      estimatedTime: ride.duration,
+      duration: ride.duration,
       passengers: ride.passengers,
-      rider: {
-        name: user.fullname,
-        photo: user.photo,
-      },
+      user,
     });
     return true;
   });

@@ -11,6 +11,7 @@ function App() {
   const [healthCheckError, setHealthCheckError] = useState("");
   const [initialLoading, setInitialLoading] = useState(true);
   const { loading, isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -44,13 +45,28 @@ function App() {
   }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
-    dispatch(fetchCurrentRide()).then(({ payload }) => {
-      if (payload?._id) {
-        socketService.initialize();
-        socketService.emitJoinRide(payload._id);
-      }
-    });
-  }, [dispatch]);
+    if (
+      isAuthenticated &&
+      user?.role === "captain" &&
+      user?.status === "active"
+    ) {
+      socketService.initialize();
+      socketService.emitCaptainOnline();
+
+      dispatch(fetchCurrentRide()).then(({ payload }) => {
+        if (payload?._id) {
+          socketService.emitJoinRide(payload._id);
+        }
+      });
+    } else if (isAuthenticated) {
+      socketService.initialize();
+      dispatch(fetchCurrentRide()).then(({ payload }) => {
+        if (payload?._id) {
+          socketService.emitJoinRide(payload._id);
+        }
+      });
+    }
+  }, [dispatch, isAuthenticated, user?.role, user?.status]);
 
   if (loading || initialLoading) {
     return <Loader />;

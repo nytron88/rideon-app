@@ -8,7 +8,7 @@ const defaultRide = {
   destination: "",
   fare: 0,
   distance: 0,
-  estimatedTime: 0,
+  duration: 0,
   passengers: 1,
   rider: {},
 };
@@ -95,7 +95,7 @@ function RideRequest({
       ease: "power2.in",
       onComplete: async () => {
         try {
-          await onAccept(ride);
+          onAccept(ride);
         } catch (error) {
           console.error("Error accepting ride:", error);
           setIsLoading(false);
@@ -144,15 +144,15 @@ function RideRequest({
 
         <div ref={contentRef} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           {/* Rider Info - Show only if photo exists */}
-          {ride.rider?.photo && (
+          {ride.user?.photo && (
             <div className="flex items-center gap-3 bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
               <img
-                src={ride.rider.photo}
+                src={ride.user.photo}
                 alt="Rider"
                 className="w-12 h-12 rounded-full object-cover"
               />
               <div>
-                <h4 className="text-white font-medium">{ride.rider.name}</h4>
+                <h4 className="text-white font-medium">{ride.user.fullname}</h4>
               </div>
             </div>
           )}
@@ -164,7 +164,7 @@ function RideRequest({
                 <Clock className="w-4 h-4 shrink-0" />
                 <span>Duration</span>
               </div>
-              <p className="text-white font-medium">{ride.estimatedTime} min</p>
+              <p className="text-white font-medium">{ride.duration} min</p>
             </div>
             <div className="bg-white/5 p-3 sm:p-4 rounded-xl border border-white/10">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-1">

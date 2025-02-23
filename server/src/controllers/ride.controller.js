@@ -104,7 +104,7 @@ const fetchCurrentRide = asyncHandler(async (req, res) => {
   const ride = await Ride.findOne({
     ...filter,
     status: { $in: ["accepted", "ongoing"] },
-  }).populate(isCaptain ? "user" : "captain", "name photo");
+  }).populate(isCaptain ? "user" : "captain", `fullname photo ${isCaptain ? "" : "vehicle"}`);
 
   if (!ride) {
     throw new ApiError(404, "No ride found");

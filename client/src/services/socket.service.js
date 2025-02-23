@@ -1,7 +1,7 @@
 import { io } from "socket.io-client";
 import { setSocket, setConnected, setError } from "../store/slices/socketSlice";
 import { store } from "../store/store";
-import { setNewRideRequest } from "../store/slices/rideSlice"; // Add this import
+import { setCurrentRide, setNewRideRequest } from "../store/slices/rideSlice";
 
 class SocketService {
   initialize() {
@@ -13,6 +13,11 @@ class SocketService {
       socket.on("connect", () => {
         store.dispatch(setError(null));
         store.dispatch(setConnected(true));
+
+        const { user } = store.getState().user;
+        if (user?._id && user?.role === "captain") {
+          this.emitCaptainOnline();
+        }
       });
 
       socket.on("disconnect", () => {
@@ -49,7 +54,15 @@ class SocketService {
       });
 
       socket.on("new_ride_request", (ride) => {
+        if (store.getState().ride.currentRide?._id) {
+          return;
+        }
         store.dispatch(setNewRideRequest(ride));
+      });
+
+      socket.on("ride_accepted", (ride) => {
+        store.dispatch(setCurrentRide(ride?.ride));
+        store.dispatch(setNewRideRequest(null));
       });
 
       store.dispatch(setSocket(socket));
@@ -95,12 +108,18 @@ class SocketService {
       if (!socket) {
         throw new Error("Socket not initialized");
       }
+
       if (!user?._id) {
         throw new Error("User not authenticated");
       }
 
+      if (user.role !== "captain" || user.status !== "active") {
+        return;
+      }
+
       socket.emit("captain_online", user._id);
     } catch (error) {
+      console.error("Captain registration error:", error);
       store.dispatch(
         setError({
           type: "EMIT_ERROR",
@@ -137,10 +156,18 @@ class SocketService {
   emitCaptainLocation(location) {
     try {
       const { socket } = store.getState().socket;
+      const { user } = store.getState().user;
 
       if (!socket) {
         throw new Error("Socket not initialized");
       }
+
+      if (!user?._id) {
+        throw new Error("User not authenticated");
+      }
+
+      this.emitCaptainOnline();
+
       if (!location?.latitude || !location?.longitude) {
         throw new Error("Invalid location data");
       }
@@ -151,6 +178,28 @@ class SocketService {
         setError({
           type: "EMIT_ERROR",
           event: "captain_location",
+          message: error.message,
+        })
+      );
+    }
+  }
+
+  emiteRideAccepted(rideId) {
+    try {
+      const { socket } = store.getState().socket;
+
+      if (!socket) {
+        throw new Error("Socket not initialized");
+      }
+      if (!rideId) {
+        throw new Error("Ride ID is required");
+      }
+      socket.emit("ride_accepted", rideId);
+    } catch (error) {
+      store.dispatch(
+        setError({
+          type: "EMIT_ERROR",
+          event: "ride_accepted",
           message: error.message,
         })
       );
