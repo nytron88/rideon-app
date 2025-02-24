@@ -1,7 +1,11 @@
 import { io } from "socket.io-client";
 import { setSocket, setConnected, setError } from "../store/slices/socketSlice";
 import { store } from "../store/store";
-import { setCurrentRide, setNewRideRequest } from "../store/slices/rideSlice";
+import {
+  setCurrentRide,
+  setNewRideRequest,
+  setCaptainLocation,
+} from "../store/slices/rideSlice";
 
 class SocketService {
   initialize() {
@@ -58,6 +62,11 @@ class SocketService {
           return;
         }
         store.dispatch(setNewRideRequest(ride));
+      });
+
+      socket.on("captain_location", (location) => {
+        console.log("Captain location:", location);
+        store.dispatch(setCaptainLocation(location));
       });
 
       socket.on("ride_accepted", (ride) => {

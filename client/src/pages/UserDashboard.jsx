@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { SearchPanel, LiveTracking } from "../components";
+import { SearchPanel, UserLiveTracking } from "../components";
 import { Menu, X } from "lucide-react";
 import gsap from "gsap";
 
@@ -160,10 +160,11 @@ function UserDashboard() {
 
   return (
     <div ref={dashboardRef} className="min-h-screen bg-black">
-      <div className="relative h-[calc(100vh-64px)]">
+      {/* Changed this div's height class */}
+      <div className="relative h-screen">
         {/* Map View */}
         <div className="absolute inset-0">
-          <LiveTracking />
+          <UserLiveTracking />
         </div>
 
         {/* Mobile Search Button - Fixed positioning in viewport */}
@@ -184,16 +185,14 @@ function UserDashboard() {
           </div>
         )}
 
-        {/* Bottom Sheet / Side Panel */}
+        {/* Bottom Sheet / Side Panel - Updated classes */}
         <div
           ref={bottomSheetRef}
           className={`fixed md:absolute ${
-            showPanel
-              ? "bottom-0 md:bottom-auto"
-              : "-bottom-full md:bottom-auto"
-          } left-0 right-0 md:left-0 md:w-[400px] z-20 
+            showPanel ? "bottom-0 md:bottom-0" : "-bottom-full md:bottom-0"
+          } left-0 right-0 md:left-0 md:w-[400px] md:top-0 z-20 
           will-change-transform backdrop-blur-lg
-          ${isMobile ? "h-[85vh]" : "h-full"}
+          ${isMobile ? "h-[75vh]" : "h-screen"}
           ${
             isMobile
               ? isDragging
@@ -203,16 +202,14 @@ function UserDashboard() {
           }`}
           style={{ transform: !isMobile ? "none" : undefined }}
         >
-          <div
-            className="h-full bg-black/95 backdrop-blur-xl shadow-2xl 
-                       flex flex-col rounded-t-3xl md:rounded-none overflow-hidden"
-          >
+          <div className="flex flex-col h-full bg-black/95 backdrop-blur-xl shadow-2xl rounded-t-3xl md:rounded-none">
             {/* Drag Handle - Mobile Only */}
             {isMobile && (
               <div className="w-full p-3 flex justify-center shrink-0">
                 <div
-                  className={`w-12 h-1.5 bg-white/20 rounded-full transition-opacity 
-                           duration-200 ${isDragging ? "opacity-50" : ""}`}
+                  className={`w-12 h-1.5 bg-white/20 rounded-full transition-opacity duration-200 ${
+                    isDragging ? "opacity-50" : ""
+                  }`}
                 />
               </div>
             )}
@@ -222,19 +219,16 @@ function UserDashboard() {
               <div className="p-4 border-b border-white/10 shrink-0">
                 <button
                   onClick={togglePanel}
-                  className="p-2 hover:bg-white/10 rounded-full transition-colors 
-                         cursor-pointer transform hover:scale-[0.98] active:scale-95"
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer transform hover:scale-[0.98] active:scale-95"
                 >
-                  <X className="w-6 h-6 text-white cursor-pointer" />
+                  <X className="w-6 h-6 text-white" />
                 </button>
               </div>
             )}
 
-            {/* Content Area - Improved scrolling */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <div className="p-4 space-y-6 custom-scrollbar overscroll-contain">
-                <SearchPanel />
-              </div>
+            {/* Content Area - Updated to ensure full height */}
+            <div className="flex-1 overflow-hidden h-full">
+              <SearchPanel />
             </div>
           </div>
         </div>

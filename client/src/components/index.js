@@ -7,7 +7,7 @@ import Error from "./Common/Error";
 import Vehicle from "./Captain/Vehicle";
 import ToastContainer from "./Common/ToastContainer";
 import SearchPanel from "./User/SearchPanel";
-import LiveTracking from "./Common/LiveTracking";
+import UserLiveTracking from "./User/UserLiveTracking";
 import InactiveCaptain from "./Captain/InactiveCaptain";
 import RideRequest from "./Captain/RideRequest";
 import ActiveRide from "./Captain/ActiveRide";
@@ -22,7 +22,7 @@ export {
   Vehicle,
   ToastContainer,
   SearchPanel,
-  LiveTracking,
+  UserLiveTracking,
   InactiveCaptain,
   RideRequest,
   ActiveRide,

@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 
 const initialState = {
   currentRide: null,
+  captainLocation: null,
   fare: null,
   loading: false,
   error: null,
@@ -121,6 +122,12 @@ const rideSlice = createSlice({
     clearNewRideRequest: (state) => {
       state.newRideRequest = null;
     },
+    setCaptainLocation: (state, action) => {
+      state.captainLocation = action.payload;
+    },
+    clearCaptainLocation: (state) => {
+      state.captainLocation = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -203,5 +210,7 @@ export const {
   setCurrentRide,
   setNewRideRequest,
   clearNewRideRequest,
+  setCaptainLocation,
+  clearCaptainLocation,
 } = rideSlice.actions;
 export default rideSlice.reducer;
