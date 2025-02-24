@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import apiClient from "../../services/api.service";
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const initialState = {
@@ -59,17 +59,14 @@ export const createPaymentIntent = createAsyncThunk(
   "ride/createPaymentIntent",
   async ({ amount, captainId, rideId }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post("ride/create-payment-intent", {
+      const response = await axios.post("/api/payments/create-payment-intent", {
         amount,
         captainId,
         rideId,
       });
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      if (error.response && error.response.data) {
-        return rejectWithValue(error.response.data);
-      }
-      return rejectWithValue("An unexpected error occurred. Please try again.");
+      return rejectWithValue(error.response.data);
     }
   }
 );
@@ -166,7 +163,7 @@ const rideSlice = createSlice({
       })
       .addCase(createPaymentIntent.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentRide = action.payload;
+        state.clientSecret = action.payload.clientSecret;
       })
       .addCase(createPaymentIntent.rejected, (state, action) => {
         state.loading = false;

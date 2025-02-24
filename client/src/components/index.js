@@ -11,6 +11,7 @@ import UserLiveTracking from "./User/UserLiveTracking";
 import InactiveCaptain from "./Captain/InactiveCaptain";
 import RideRequest from "./Captain/RideRequest";
 import ActiveRide from "./Captain/ActiveRide";
+import StripePayment from "./User/StripePayment";
 
 export {
   AuthLayout,
@@ -26,4 +27,5 @@ export {
   InactiveCaptain,
   RideRequest,
   ActiveRide,
+  StripePayment,
 };

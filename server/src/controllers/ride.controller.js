@@ -10,6 +10,7 @@ import {
 import { getAddressCoordinate } from "../services/maps.service.js";
 import { createPaymentIntent as createPaymentIntentService } from "../services/stripe.service.js";
 import { notifyNearbyCaptains } from "../socket.js";
+import { User } from "../models/user.model.js";
 
 const createRide = asyncHandler(async (req, res) => {
   const { pickup, destination, passengers, fare, distance, duration } =
@@ -104,7 +105,10 @@ const fetchCurrentRide = asyncHandler(async (req, res) => {
   const ride = await Ride.findOne({
     ...filter,
     status: { $in: ["accepted", "ongoing"] },
-  }).populate(isCaptain ? "user" : "captain", `fullname photo ${isCaptain ? "" : "vehicle"}`);
+  }).populate(
+    isCaptain ? "user" : "captain",
+    `fullname photo ${isCaptain ? "" : "vehicle"}`
+  );
 
   if (!ride) {
     throw new ApiError(404, "No ride found");

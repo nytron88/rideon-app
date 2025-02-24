@@ -24,9 +24,7 @@ const webhookController = asyncHandler(async (req, res) => {
     }
   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, null, "Webhook processed successfully"));
+  return res.status(200).json(new ApiResponse(200, null, "Webhook received"));
 });
 
-export default webhookController;
+export default webhookController ;
